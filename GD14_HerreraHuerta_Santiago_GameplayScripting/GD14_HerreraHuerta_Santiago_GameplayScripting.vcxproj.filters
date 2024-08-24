@@ -13,6 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\UsefulSystems">
+      <UniqueIdentifier>{f8284b58-1408-4ea2-bdaa-a8b78e788388}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UsefulSystems\Collision">
+      <UniqueIdentifier>{7004682f-6a1e-4090-9d30-37e77c9ef4d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UsefulSystems\Draw">
+      <UniqueIdentifier>{3c1c49fe-2045-47b7-9c2e-db6f35da9db3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UsefulSystems\Math">
+      <UniqueIdentifier>{3cb44210-e76f-4e83-b383-7f4c029858c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\UsefulSystems\Structs">
+      <UniqueIdentifier>{fb9ca421-fecb-4739-9b24-769a39850c86}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game.cpp">
@@ -24,6 +39,36 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="UsefulSystems\Collision\SCollision.cpp">
+      <Filter>Header Files\UsefulSystems\Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Draw\UAnimation.cpp">
+      <Filter>Header Files\UsefulSystems\Draw</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Draw\UTexture.cpp">
+      <Filter>Header Files\UsefulSystems\Draw</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\SAngles.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\SGeometry.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\SMatrix.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\STools.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\STrigonometry.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\SVectors.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="UsefulSystems\Math\Vector2f.cpp">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h">
@@ -31,6 +76,60 @@
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Collision\SCollision.h">
+      <Filter>Header Files\UsefulSystems\Collision</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Draw\UAnimation.h">
+      <Filter>Header Files\UsefulSystems\Draw</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Draw\UTexture.h">
+      <Filter>Header Files\UsefulSystems\Draw</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\SAngles.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\SGeometry.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\SMatrix.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\STools.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\STrigonometry.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\SVectors.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Math\Vector2f.h">
+      <Filter>Header Files\UsefulSystems\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Structs\FCollision.h">
+      <Filter>Header Files\UsefulSystems\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Structs\FColor.h">
+      <Filter>Header Files\UsefulSystems\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Structs\FMatrix.h">
+      <Filter>Header Files\UsefulSystems\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Structs\FShapes.h">
+      <Filter>Header Files\UsefulSystems\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Structs\FTransform.h">
+      <Filter>Header Files\UsefulSystems\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Structs\FVector.h">
+      <Filter>Header Files\UsefulSystems\Structs</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\Includes.h">
+      <Filter>Header Files\UsefulSystems</Filter>
+    </ClInclude>
+    <ClInclude Include="UsefulSystems\ExternalIncludes.h">
+      <Filter>Header Files\UsefulSystems</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

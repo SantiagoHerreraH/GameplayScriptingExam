@@ -109,7 +109,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -150,10 +151,38 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="UsefulSystems\Collision\SCollision.cpp" />
+    <ClCompile Include="UsefulSystems\Draw\UAnimation.cpp" />
+    <ClCompile Include="UsefulSystems\Draw\UTexture.cpp" />
+    <ClCompile Include="UsefulSystems\Math\SAngles.cpp" />
+    <ClCompile Include="UsefulSystems\Math\SGeometry.cpp" />
+    <ClCompile Include="UsefulSystems\Math\SMatrix.cpp" />
+    <ClCompile Include="UsefulSystems\Math\STools.cpp" />
+    <ClCompile Include="UsefulSystems\Math\STrigonometry.cpp" />
+    <ClCompile Include="UsefulSystems\Math\SVectors.cpp" />
+    <ClCompile Include="UsefulSystems\Math\Vector2f.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="UsefulSystems\Collision\SCollision.h" />
+    <ClInclude Include="UsefulSystems\Draw\UAnimation.h" />
+    <ClInclude Include="UsefulSystems\Draw\UTexture.h" />
+    <ClInclude Include="UsefulSystems\ExternalIncludes.h" />
+    <ClInclude Include="UsefulSystems\Includes.h" />
+    <ClInclude Include="UsefulSystems\Math\SAngles.h" />
+    <ClInclude Include="UsefulSystems\Math\SGeometry.h" />
+    <ClInclude Include="UsefulSystems\Math\SMatrix.h" />
+    <ClInclude Include="UsefulSystems\Math\STools.h" />
+    <ClInclude Include="UsefulSystems\Math\STrigonometry.h" />
+    <ClInclude Include="UsefulSystems\Math\SVectors.h" />
+    <ClInclude Include="UsefulSystems\Math\Vector2f.h" />
+    <ClInclude Include="UsefulSystems\Structs\FCollision.h" />
+    <ClInclude Include="UsefulSystems\Structs\FColor.h" />
+    <ClInclude Include="UsefulSystems\Structs\FMatrix.h" />
+    <ClInclude Include="UsefulSystems\Structs\FShapes.h" />
+    <ClInclude Include="UsefulSystems\Structs\FTransform.h" />
+    <ClInclude Include="UsefulSystems\Structs\FVector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
