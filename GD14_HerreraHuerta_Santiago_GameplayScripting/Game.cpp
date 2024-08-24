@@ -64,13 +64,12 @@ void Game::Update( float elapsedSec )
 
 	// --- CAMERA LOGIC --- 
 	
-	//FVector2f cameraDirection{ 
-	//	SVectors::NormalizeVector(
-	//		SVectors::Subtract(m_Player.Body.WorldCircle.Center, m_Camera.Position)) };
-	//m_Camera.Position.X += cameraDirection.X * m_Camera.FollowingSpeed * elapsedSec;
-	//m_Camera.Position.Y += cameraDirection.Y * m_Camera.FollowingSpeed * elapsedSec;
+	FVector2f cameraDirection{ 
+			SVectors::Subtract(m_Player.Body.WorldCircle.Center, m_Camera.Position) };
+	m_Camera.Position.X += cameraDirection.X * m_Camera.FollowingSpeed * elapsedSec;
+	m_Camera.Position.Y += cameraDirection.Y * m_Camera.FollowingSpeed * elapsedSec;
 
-	m_Camera.Position = m_Player.Body.WorldCircle.Center;
+	//m_Camera.Position = m_Player.Body.WorldCircle.Center;
 
 	// --- OFFSET
 

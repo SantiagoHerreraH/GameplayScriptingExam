@@ -22,7 +22,7 @@ struct FPlayer {
 
 struct FCamera {
 
-	float FollowingSpeed{1};
+	float FollowingSpeed{10};
 	FVector2f Position;
 };
 
