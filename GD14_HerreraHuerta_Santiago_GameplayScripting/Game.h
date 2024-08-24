@@ -21,6 +21,8 @@ struct FPlayer {
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
 
+	float MovementSpeed{ 50000 };
+
 	float MaxPlayerVelocityPerSecond{ 1000 };
 	float ShotForceMagnitude{ 60000 };
 	float CollisionImpactForceMagnitude{ 500 };
@@ -37,6 +39,7 @@ struct FBullet {
 	FCircleCollider Body;
 	FVector2f Velocity;
 	bool Spawned{ false };
+	float CurrentBulletTimeSpawned{ 0.f };
 };
 
 struct FCamera {
@@ -86,7 +89,6 @@ private:
 	FColor4i m_PlayerWoundedColor{ 255,100,100,255 };
 	FColor4i m_PlayerNormalColor{ 0,255,0,255 };
 	FPlayer m_Player{};
-	std::vector<FBullet> m_PlayerBullets;
 
 	int m_NumOfEnemies{1};
 	FColor4i m_EnemyWoundedColor{255,0,255,255};

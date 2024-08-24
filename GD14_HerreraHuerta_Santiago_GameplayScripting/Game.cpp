@@ -47,15 +47,28 @@ void Game::Cleanup( )
 void Game::Update( float elapsedSec )
 {
 	// Check keyboard state
-	//const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
-	//if ( pStates[SDL_SCANCODE_RIGHT] )
-	//{
-	//	std::cout << "Right arrow key is down\n";
-	//}
-	//if ( pStates[SDL_SCANCODE_LEFT] && pStates[SDL_SCANCODE_UP])
-	//{
-	//	std::cout << "Left and up arrow keys are down\n";
-	//}
+	const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
+	if (!m_Player.Wounded)
+	{
+		m_Player.Velocity = FVector2f{ 0,0 };
+
+		if (pStates[SDL_SCANCODE_D])
+		{
+			m_Player.Velocity.X += m_Player.MovementSpeed * elapsedSec;
+		}
+		if (pStates[SDL_SCANCODE_A])
+		{
+			m_Player.Velocity.X -= m_Player.MovementSpeed * elapsedSec;
+		}
+		if (pStates[SDL_SCANCODE_W])
+		{
+			m_Player.Velocity.Y += m_Player.MovementSpeed * elapsedSec;
+		}
+		if (pStates[SDL_SCANCODE_S])
+		{
+			m_Player.Velocity.Y -= m_Player.MovementSpeed * elapsedSec;
+		}
+	}
 
 	FVector2f followingOffset{};
 
@@ -267,7 +280,7 @@ void Game::Update( float elapsedSec )
 	m_Player.Shield.WorldCircle.Center =
 		SVectors::Add(SVectors::Scale(
 			SVectors::NormalizeVector(
-				SVectors::Subtract(m_Player.Body.ScreenCircle.Center, m_CurrentMouseScreenPosition)),
+				SVectors::Subtract(m_CurrentMouseScreenPosition, m_Player.Body.ScreenCircle.Center)),
 			m_Player.ShieldDistanceFromBodyCenter), m_Player.Body.WorldCircle.Center);
 	
 	m_Player.Shield.ScreenCircle.Center.X = m_Player.Shield.WorldCircle.Center.X + cameraDelta.X;
@@ -369,13 +382,14 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 	//	break;
 	//}
 
+	FVector2f normalizedDirectionFromMousePosToPlayer{
+		SVectors::NormalizeVector(
+					SVectors::Subtract(m_Player.Body.ScreenCircle.Center, FVector2f{ float(e.x), float(e.y)})) };
+
 	if (!m_Player.Wounded)
 	{
 		m_Player.CurrentShotForce =
-			SVectors::Scale(
-				SVectors::NormalizeVector(
-					SVectors::Subtract(m_Player.Body.ScreenCircle.Center, FVector2f{ float(e.x), float(e.y) }))
-				, m_Player.ShotForceMagnitude);
+			SVectors::Scale(normalizedDirectionFromMousePosToPlayer, m_Player.ShotForceMagnitude);
 	}
 }
 
