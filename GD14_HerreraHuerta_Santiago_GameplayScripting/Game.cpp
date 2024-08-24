@@ -14,7 +14,11 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	
+	Body.Radius = 50;
+	Body.Center = FVector2f{ 100,100 };
+
+	Player.Body.Radius = 50;
+	Player.Body.Center = FVector2f{ 400,100 };
 }
 
 void Game::Cleanup( )
@@ -33,11 +37,33 @@ void Game::Update( float elapsedSec )
 	//{
 	//	std::cout << "Left and up arrow keys are down\n";
 	//}
+
+	Player.Velocity.X += Player.CurrentShotForce.X * elapsedSec;
+	Player.Velocity.Y += Player.CurrentShotForce.Y * elapsedSec;
+
+	Player.Body.Center.X += Player.Velocity.X * elapsedSec;
+	Player.Body.Center.Y += Player.Velocity.Y * elapsedSec;
+
+	Player.CurrentShotForce.X = 0;
+	Player.CurrentShotForce.Y = 0;
+
+	if (SCollision::IsOverlapping(
+		Body, Player.Body,
+		OverlapInfo, Player.OverlapInfo))
+	{
+		Player.Body.Center.X += Player.OverlapInfo.TranslationVector.X;
+		Player.Body.Center.Y += Player.OverlapInfo.TranslationVector.Y;
+
+		Player.Velocity.X += Player.OverlapInfo.TranslationVector.X;
+		Player.Velocity.Y += Player.OverlapInfo.TranslationVector.Y;
+	}
 }
 
 void Game::Draw( ) const
 {
 	ClearBackground( );
+	Body.Draw(FColor4i{ 255,0,0,255 }, true);
+	Player.Body.Draw(FColor4i{ 0,255,0,255 }, true);
 }
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
@@ -83,7 +109,12 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 	//	std::cout << " middle button " << std::endl;
 	//	break;
 	//}
-	
+
+	Player.CurrentShotForce =
+		SVectors::Scale(
+			SVectors::NormalizeVector(
+				SVectors::Subtract(Player.Body.Center, FVector2f{ float(e.x), float(e.y) }))
+			, Player.ShotForceMagnitude);
 }
 
 void Game::ProcessMouseUpEvent( const SDL_MouseButtonEvent& e )

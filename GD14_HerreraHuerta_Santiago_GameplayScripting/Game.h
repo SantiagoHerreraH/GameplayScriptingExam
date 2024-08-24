@@ -1,5 +1,19 @@
 #pragma once
 #include "BaseGame.h"
+#include "UsefulSystems/Includes.h"
+
+using namespace Pillar;
+
+struct FPlayer {
+
+	FCirclef Shield;
+	FCirclef Body;
+	FOverlapInfo OverlapInfo;
+	FVector2f Velocity;
+	FVector2f CurrentShotForce;
+	float ShotForceMagnitude{ 60000 };
+};
+
 class Game : public BaseGame
 {
 public:
@@ -22,6 +36,11 @@ public:
 	void ProcessMouseUpEvent( const SDL_MouseButtonEvent& e ) override;
 
 private:
+
+	FPlayer Player{};
+
+	FCirclef Body;
+	FOverlapInfo OverlapInfo;
 
 	// FUNCTIONS
 	void Initialize();

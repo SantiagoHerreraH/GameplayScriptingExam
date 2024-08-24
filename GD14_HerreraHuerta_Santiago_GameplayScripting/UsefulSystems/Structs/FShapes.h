@@ -70,7 +70,7 @@ namespace Pillar {
 
 		Type Radius;
 
-		void Draw(const FColor4i color, bool fill, float lineWidth = 1.f) {
+		void Draw(const FColor4i color, bool fill, float lineWidth = 1.f) const{
 			
 			glColor4f(
 				color.GetR() / (float)color.MAXVALUE,
