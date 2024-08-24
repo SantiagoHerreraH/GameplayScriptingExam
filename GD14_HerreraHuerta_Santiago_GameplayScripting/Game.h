@@ -4,14 +4,26 @@
 
 using namespace Pillar;
 
+struct FCircleCollider {
+
+	FCirclef WorldCircle;
+	FCirclef ScreenCircle;
+};
+
 struct FPlayer {
 
-	FCirclef Shield;
-	FCirclef Body;
+	FCircleCollider Shield;
+	FCircleCollider Body;
 	FOverlapInfo OverlapInfo;
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
 	float ShotForceMagnitude{ 60000 };
+};
+
+struct FCamera {
+
+	float FollowingSpeed{1};
+	FVector2f Position;
 };
 
 class Game : public BaseGame
@@ -37,9 +49,10 @@ public:
 
 private:
 
-	FPlayer Player{};
+	FCamera m_Camera{};
+	FPlayer m_Player{};
 
-	FCirclef Body;
+	FCircleCollider Body;
 	FOverlapInfo OverlapInfo;
 
 	// FUNCTIONS

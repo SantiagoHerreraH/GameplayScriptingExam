@@ -14,11 +14,15 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	Body.Radius = 50;
-	Body.Center = FVector2f{ 100,100 };
+	Body.WorldCircle.Radius = 50;
+	Body.WorldCircle.Center = FVector2f{ 100,100 };
+	Body.ScreenCircle = Body.WorldCircle;
 
-	Player.Body.Radius = 50;
-	Player.Body.Center = FVector2f{ 400,100 };
+	m_Player.Body.WorldCircle.Radius = 50;
+	m_Player.Body.WorldCircle.Center = FVector2f{ 400,100 };
+	m_Player.Body.ScreenCircle = m_Player.Body.WorldCircle;
+
+	m_Camera.Position = m_Player.Body.WorldCircle.Center;
 }
 
 void Game::Cleanup( )
@@ -38,32 +42,56 @@ void Game::Update( float elapsedSec )
 	//	std::cout << "Left and up arrow keys are down\n";
 	//}
 
-	Player.Velocity.X += Player.CurrentShotForce.X * elapsedSec;
-	Player.Velocity.Y += Player.CurrentShotForce.Y * elapsedSec;
+	m_Player.Velocity.X += m_Player.CurrentShotForce.X * elapsedSec;
+	m_Player.Velocity.Y += m_Player.CurrentShotForce.Y * elapsedSec;
 
-	Player.Body.Center.X += Player.Velocity.X * elapsedSec;
-	Player.Body.Center.Y += Player.Velocity.Y * elapsedSec;
+	m_Player.Body.WorldCircle.Center.X += m_Player.Velocity.X * elapsedSec;
+	m_Player.Body.WorldCircle.Center.Y += m_Player.Velocity.Y * elapsedSec;
 
-	Player.CurrentShotForce.X = 0;
-	Player.CurrentShotForce.Y = 0;
+	m_Player.CurrentShotForce.X = 0;
+	m_Player.CurrentShotForce.Y = 0;
 
 	if (SCollision::IsOverlapping(
-		Body, Player.Body,
-		OverlapInfo, Player.OverlapInfo))
+		Body.WorldCircle, m_Player.Body.WorldCircle,
+		OverlapInfo, m_Player.OverlapInfo))
 	{
-		Player.Body.Center.X += Player.OverlapInfo.TranslationVector.X;
-		Player.Body.Center.Y += Player.OverlapInfo.TranslationVector.Y;
+		m_Player.Body.WorldCircle.Center.X += m_Player.OverlapInfo.TranslationVector.X;
+		m_Player.Body.WorldCircle.Center.Y += m_Player.OverlapInfo.TranslationVector.Y;
 
-		Player.Velocity.X += Player.OverlapInfo.TranslationVector.X;
-		Player.Velocity.Y += Player.OverlapInfo.TranslationVector.Y;
+		m_Player.Velocity.X += m_Player.OverlapInfo.TranslationVector.X;
+		m_Player.Velocity.Y += m_Player.OverlapInfo.TranslationVector.Y;
 	}
+
+	// --- CAMERA LOGIC --- 
+	
+	//FVector2f cameraDirection{ 
+	//	SVectors::NormalizeVector(
+	//		SVectors::Subtract(m_Player.Body.WorldCircle.Center, m_Camera.Position)) };
+	//m_Camera.Position.X += cameraDirection.X * m_Camera.FollowingSpeed * elapsedSec;
+	//m_Camera.Position.Y += cameraDirection.Y * m_Camera.FollowingSpeed * elapsedSec;
+
+	m_Camera.Position = m_Player.Body.WorldCircle.Center;
+
+	// --- OFFSET
+
+	FVector2f cameraDelta{
+	(GetViewPort().width / 2.f) - m_Camera.Position.X,
+	(GetViewPort().height / 2.f) - m_Camera.Position.Y
+	};
+
+	m_Player.Body.ScreenCircle.Center.X = m_Player.Body.WorldCircle.Center.X + cameraDelta.X;
+	m_Player.Body.ScreenCircle.Center.Y = m_Player.Body.WorldCircle.Center.Y + cameraDelta.Y;
+
+	Body.ScreenCircle.Center.X = Body.WorldCircle.Center.X + cameraDelta.X;
+	Body.ScreenCircle.Center.Y = Body.WorldCircle.Center.Y + cameraDelta.Y;
+
 }
 
 void Game::Draw( ) const
 {
 	ClearBackground( );
-	Body.Draw(FColor4i{ 255,0,0,255 }, true);
-	Player.Body.Draw(FColor4i{ 0,255,0,255 }, true);
+	Body.ScreenCircle.Draw(FColor4i{ 255,0,0,255 }, true);
+	m_Player.Body.ScreenCircle.Draw(FColor4i{ 0,255,0,255 }, true);
 }
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
@@ -110,11 +138,11 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 	//	break;
 	//}
 
-	Player.CurrentShotForce =
+	m_Player.CurrentShotForce =
 		SVectors::Scale(
 			SVectors::NormalizeVector(
-				SVectors::Subtract(Player.Body.Center, FVector2f{ float(e.x), float(e.y) }))
-			, Player.ShotForceMagnitude);
+				SVectors::Subtract(m_Player.Body.ScreenCircle.Center, FVector2f{ float(e.x), float(e.y) }))
+			, m_Player.ShotForceMagnitude);
 }
 
 void Game::ProcessMouseUpEvent( const SDL_MouseButtonEvent& e )
