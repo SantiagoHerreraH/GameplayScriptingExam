@@ -32,7 +32,7 @@ struct FEnemy {
 	FCircleCollider Body;
 	FOverlapInfo OverlapInfo;
 	FVector2f Velocity;
-	float FollowingSpeed{10};
+	float FollowingSpeed{500};
 
 	bool Wounded{ false };
 	float MaxWoundedTime{1.f};
