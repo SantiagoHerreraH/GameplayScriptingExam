@@ -13,8 +13,11 @@ struct FCircleCollider {
 struct FPlayer {
 
 	FCircleCollider Shield;
+	FOverlapInfo ShieldOverlapInfo;
+	float ShieldDistanceFromBodyCenter{ 100 };
+
 	FCircleCollider Body;
-	FOverlapInfo OverlapInfo;
+	FOverlapInfo BodyOverlapInfo;
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
 
@@ -45,7 +48,7 @@ struct FCamera {
 struct FEnemy {
 	
 	FCircleCollider Body;
-	FOverlapInfo OverlapInfo;
+	FOverlapInfo BodyOverlapInfo;
 	FVector2f Velocity;
 	float FollowingSpeed{500};
 
@@ -78,12 +81,12 @@ public:
 private:
 
 	FCamera m_Camera{};
-
+	FVector2f m_CurrentMouseScreenPosition{};
 
 	FColor4i m_PlayerWoundedColor{ 255,100,100,255 };
 	FColor4i m_PlayerNormalColor{ 0,255,0,255 };
 	FPlayer m_Player{};
-	//std::vector<FBullet> m_PlayerBullets;
+	std::vector<FBullet> m_PlayerBullets;
 
 	int m_NumOfEnemies{1};
 	FColor4i m_EnemyWoundedColor{255,0,255,255};

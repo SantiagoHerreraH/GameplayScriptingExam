@@ -34,6 +34,9 @@ void Game::Initialize( )
 	m_Player.Body.WorldCircle.Center = FVector2f{ 400,100 };
 	m_Player.Body.ScreenCircle = m_Player.Body.WorldCircle;
 
+	m_Player.Shield.WorldCircle.Radius = 50;
+	m_Player.Shield.ScreenCircle = m_Player.Shield.WorldCircle;
+
 	m_Camera.Position = m_Player.Body.WorldCircle.Center;
 }
 
@@ -88,6 +91,9 @@ void Game::Update( float elapsedSec )
 	m_Player.Velocity.X += m_Player.CurrentShotForce.X * elapsedSec;
 	m_Player.Velocity.Y += m_Player.CurrentShotForce.Y * elapsedSec;
 
+	m_Player.CurrentShotForce.X = 0;
+	m_Player.CurrentShotForce.Y = 0;
+
 	FVector2f velocity{ m_Player.Velocity.X, m_Player.Velocity.Y };
 
 	if (abs(velocity.X) <= m_Player.MaxPlayerVelocityPerSecond)
@@ -122,9 +128,6 @@ void Game::Update( float elapsedSec )
 		}
 	}
 
-	m_Player.CurrentShotForce.X = 0;
-	m_Player.CurrentShotForce.Y = 0;
-
 	FVector2f hitForce{};
 
 	if (m_Player.Wounded)
@@ -140,16 +143,35 @@ void Game::Update( float elapsedSec )
 
 	for (size_t i = 0; i < m_Enemies.size(); i++)
 	{
+
 		if (SCollision::IsOverlapping(
-			m_Enemies.at(i).Body.WorldCircle, m_Player.Body.WorldCircle,
-			m_Enemies.at(i).OverlapInfo, m_Player.OverlapInfo))
+			m_Enemies.at(i).Body.WorldCircle, m_Player.Shield.WorldCircle,
+			m_Enemies.at(i).BodyOverlapInfo, m_Player.ShieldOverlapInfo))
 		{
-			//Solve for player
-			m_Player.Body.WorldCircle.Center.X += m_Player.OverlapInfo.TranslationVector.X;
-			m_Player.Body.WorldCircle.Center.Y += m_Player.OverlapInfo.TranslationVector.Y;
+			m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).BodyOverlapInfo.TranslationVector.X;
+			m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).BodyOverlapInfo.TranslationVector.Y;
 
 			hitForce = SVectors::Scale(
-				SVectors::NormalizeVector(m_Player.OverlapInfo.TranslationVector),
+				SVectors::NormalizeVector(m_Enemies.at(i).BodyOverlapInfo.TranslationVector),
+				m_Player.CollisionImpactForceMagnitude * elapsedSec);
+
+			m_Enemies.at(i).Velocity.X += hitForce.X;
+			m_Enemies.at(i).Velocity.Y += hitForce.Y;
+
+			m_Enemies.at(i).Wounded = true;
+			m_Enemies.at(i).CurrentWoundedTime = 0;
+		}
+
+		if (SCollision::IsOverlapping(
+			m_Enemies.at(i).Body.WorldCircle, m_Player.Body.WorldCircle,
+			m_Enemies.at(i).BodyOverlapInfo, m_Player.BodyOverlapInfo))
+		{
+			//Solve for player
+			m_Player.Body.WorldCircle.Center.X += m_Player.BodyOverlapInfo.TranslationVector.X;
+			m_Player.Body.WorldCircle.Center.Y += m_Player.BodyOverlapInfo.TranslationVector.Y;
+
+			hitForce = SVectors::Scale(
+				SVectors::NormalizeVector(m_Player.BodyOverlapInfo.TranslationVector),
 				m_Player.CollisionImpactForceMagnitude * elapsedSec);
 
 			m_Player.Velocity.X += hitForce.X;
@@ -162,18 +184,15 @@ void Game::Update( float elapsedSec )
 			}
 
 			//Solve for enemy
-			m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).OverlapInfo.TranslationVector.X;
-			m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).OverlapInfo.TranslationVector.Y;
+			m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).BodyOverlapInfo.TranslationVector.X;
+			m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).BodyOverlapInfo.TranslationVector.Y;
 
 			hitForce = SVectors::Scale(
-				SVectors::NormalizeVector(m_Enemies.at(i).OverlapInfo.TranslationVector), 
+				SVectors::NormalizeVector(m_Enemies.at(i).BodyOverlapInfo.TranslationVector), 
 				m_Player.CollisionImpactForceMagnitude * elapsedSec);
 
 			m_Enemies.at(i).Velocity.X += hitForce.X;
 			m_Enemies.at(i).Velocity.Y += hitForce.Y;
-
-			m_Enemies.at(i).Wounded = true;
-			m_Enemies.at(i).CurrentWoundedTime = 0;
 		}
 
 		for (size_t j = i + 1; j < m_Enemies.size(); j++)
@@ -182,15 +201,15 @@ void Game::Update( float elapsedSec )
 			{
 				if (SCollision::IsOverlapping(
 					m_Enemies.at(i).Body.WorldCircle, m_Enemies.at(j).Body.WorldCircle,
-					m_Enemies.at(i).OverlapInfo, m_Enemies.at(j).OverlapInfo))
+					m_Enemies.at(i).BodyOverlapInfo, m_Enemies.at(j).BodyOverlapInfo))
 				{
 
 					//Solve for enemy one
-					m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).OverlapInfo.TranslationVector.X;
-					m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).OverlapInfo.TranslationVector.Y;
+					m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).BodyOverlapInfo.TranslationVector.X;
+					m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).BodyOverlapInfo.TranslationVector.Y;
 
 					hitForce = SVectors::Scale(
-						SVectors::NormalizeVector(m_Enemies.at(i).OverlapInfo.TranslationVector),
+						SVectors::NormalizeVector(m_Enemies.at(i).BodyOverlapInfo.TranslationVector),
 						m_Player.CollisionImpactForceMagnitude * elapsedSec);
 
 					m_Enemies.at(i).Velocity.X += hitForce.X;
@@ -203,11 +222,11 @@ void Game::Update( float elapsedSec )
 					}
 
 					//Solve for enemy two
-					m_Enemies.at(j).Body.WorldCircle.Center.X += m_Enemies.at(j).OverlapInfo.TranslationVector.X;
-					m_Enemies.at(j).Body.WorldCircle.Center.Y += m_Enemies.at(j).OverlapInfo.TranslationVector.Y;
+					m_Enemies.at(j).Body.WorldCircle.Center.X += m_Enemies.at(j).BodyOverlapInfo.TranslationVector.X;
+					m_Enemies.at(j).Body.WorldCircle.Center.Y += m_Enemies.at(j).BodyOverlapInfo.TranslationVector.Y;
 
 					hitForce = SVectors::Scale(
-						SVectors::NormalizeVector(m_Enemies.at(j).OverlapInfo.TranslationVector),
+						SVectors::NormalizeVector(m_Enemies.at(j).BodyOverlapInfo.TranslationVector),
 						m_Player.CollisionImpactForceMagnitude * elapsedSec);
 
 					m_Enemies.at(j).Velocity.X += hitForce.X;
@@ -222,8 +241,6 @@ void Game::Update( float elapsedSec )
 			}
 		}
 	}
-
-
 	
 
 	// --- CAMERA LOGIC --- 
@@ -242,8 +259,19 @@ void Game::Update( float elapsedSec )
 	(GetViewPort().height / 2.f) - m_Camera.Position.Y
 	};
 
+	//Player
+
 	m_Player.Body.ScreenCircle.Center.X = m_Player.Body.WorldCircle.Center.X + cameraDelta.X;
 	m_Player.Body.ScreenCircle.Center.Y = m_Player.Body.WorldCircle.Center.Y + cameraDelta.Y;
+
+	m_Player.Shield.WorldCircle.Center =
+		SVectors::Add(SVectors::Scale(
+			SVectors::NormalizeVector(
+				SVectors::Subtract(m_Player.Body.ScreenCircle.Center, m_CurrentMouseScreenPosition)),
+			m_Player.ShieldDistanceFromBodyCenter), m_Player.Body.WorldCircle.Center);
+	
+	m_Player.Shield.ScreenCircle.Center.X = m_Player.Shield.WorldCircle.Center.X + cameraDelta.X;
+	m_Player.Shield.ScreenCircle.Center.Y = m_Player.Shield.WorldCircle.Center.Y + cameraDelta.Y;
 
 	m_Bounds.ScreenCircle.Center.X = m_Bounds.WorldCircle.Center.X + cameraDelta.X;
 	m_Bounds.ScreenCircle.Center.Y = m_Bounds.WorldCircle.Center.Y + cameraDelta.Y;
@@ -283,6 +311,8 @@ void Game::Draw( ) const
 	{
 		m_Player.Body.ScreenCircle.Draw(m_PlayerNormalColor, true);
 	}
+
+	m_Player.Shield.ScreenCircle.Draw(FColor4i{255,255,255,255}, true);
 	
 	//utils::DrawLine(
 	//	m_Player.Body.ScreenCircle.Center.X,
@@ -318,6 +348,9 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 void Game::ProcessMouseMotionEvent( const SDL_MouseMotionEvent& e )
 {
 	//std::cout << "MOUSEMOTION event: " << e.x << ", " << e.y << std::endl;
+
+	m_CurrentMouseScreenPosition.X = e.x;
+	m_CurrentMouseScreenPosition.Y = e.y;
 }
 
 void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
