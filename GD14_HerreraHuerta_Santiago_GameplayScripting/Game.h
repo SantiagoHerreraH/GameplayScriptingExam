@@ -17,8 +17,23 @@ struct FPlayer {
 	FOverlapInfo OverlapInfo;
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
+
+	float MaxPlayerVelocityPerSecond{ 1000 };
 	float ShotForceMagnitude{ 60000 };
 	float CollisionImpactForceMagnitude{ 500 };
+
+	bool Wounded{ false };
+	float CurrentWoundedTime{};
+	float MaxWoundedTime{1.f};
+
+	int MaxLife{ 3 };
+	int CurrentLife{ 3 };
+};
+
+struct FBullet {
+	FCircleCollider Body;
+	FVector2f Velocity;
+	bool Spawned{ false };
 };
 
 struct FCamera {
@@ -63,10 +78,19 @@ public:
 private:
 
 	FCamera m_Camera{};
-	FPlayer m_Player{};
 
-	int m_NumOfEnemies{10};
+
+	FColor4i m_PlayerWoundedColor{ 255,100,100,255 };
+	FColor4i m_PlayerNormalColor{ 0,255,0,255 };
+	FPlayer m_Player{};
+	//std::vector<FBullet> m_PlayerBullets;
+
+	int m_NumOfEnemies{1};
+	FColor4i m_EnemyWoundedColor{255,0,255,255};
+	FColor4i m_EnemyNormalColor{ 255,0,0,255 };
 	std::vector<FEnemy> m_Enemies;
+
+	FCircleCollider m_Bounds;
 
 	// FUNCTIONS
 	void Initialize();
