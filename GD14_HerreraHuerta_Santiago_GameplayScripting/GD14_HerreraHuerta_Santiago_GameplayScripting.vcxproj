@@ -160,7 +160,6 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClCompile Include="UsefulSystems\Math\STools.cpp" />
     <ClCompile Include="UsefulSystems\Math\STrigonometry.cpp" />
     <ClCompile Include="UsefulSystems\Math\SVectors.cpp" />
-    <ClCompile Include="UsefulSystems\Math\Vector2f.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Game.h" />
@@ -176,7 +175,6 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClInclude Include="UsefulSystems\Math\STools.h" />
     <ClInclude Include="UsefulSystems\Math\STrigonometry.h" />
     <ClInclude Include="UsefulSystems\Math\SVectors.h" />
-    <ClInclude Include="UsefulSystems\Math\Vector2f.h" />
     <ClInclude Include="UsefulSystems\Structs\FCollision.h" />
     <ClInclude Include="UsefulSystems\Structs\FColor.h" />
     <ClInclude Include="UsefulSystems\Structs\FMatrix.h" />

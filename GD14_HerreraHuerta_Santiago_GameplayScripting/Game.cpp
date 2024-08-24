@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Game.h"
+#include "utils.h"
 
 Game::Game( const Window& window ) 
 	:BaseGame{ window }
@@ -14,9 +15,17 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	Body.WorldCircle.Radius = 50;
-	Body.WorldCircle.Center = FVector2f{ 100,100 };
-	Body.ScreenCircle = Body.WorldCircle;
+	m_Enemies.resize(m_NumOfEnemies);
+
+	for (size_t i = 0; i < m_Enemies.size(); i++)
+	{
+		m_Enemies.at(i).Body.WorldCircle.Radius = 50;
+		m_Enemies.at(i).Body.WorldCircle.Center = 
+			FVector2f{ 
+			(float)STools::GetRandomBetweenRange(0,GetViewPort().width),
+			(float)STools::GetRandomBetweenRange(0,GetViewPort().height) };
+		m_Enemies.at(i).Body.ScreenCircle = m_Enemies.at(i).Body.WorldCircle;
+	}
 
 	m_Player.Body.WorldCircle.Radius = 50;
 	m_Player.Body.WorldCircle.Center = FVector2f{ 400,100 };
@@ -42,6 +51,37 @@ void Game::Update( float elapsedSec )
 	//	std::cout << "Left and up arrow keys are down\n";
 	//}
 
+	FVector2f followingOffset{};
+
+	for (size_t i = 0; i < m_Enemies.size(); i++)
+	{
+		if (!m_Enemies.at(i).Wounded)
+		{
+			followingOffset =
+				SVectors::Scale(SVectors::NormalizeVector(
+					SVectors::Subtract(m_Player.Body.WorldCircle.Center, m_Enemies.at(i).Body.WorldCircle.Center)),
+					m_Enemies.at(i).FollowingSpeed * elapsedSec);
+
+			m_Enemies.at(i).Velocity.X += followingOffset.X;
+			m_Enemies.at(i).Velocity.Y += followingOffset.Y;
+		}
+		else
+		{
+			m_Enemies.at(i).CurrentWoundedTime += elapsedSec;
+
+			if (m_Enemies.at(i).CurrentWoundedTime >= m_Enemies.at(i).MaxWoundedTime)
+			{
+				m_Enemies.at(i).CurrentWoundedTime = 0;
+				m_Enemies.at(i).Wounded = false;
+			}
+		}
+		
+
+		m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).Velocity.X;
+		m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).Velocity.Y;
+	}
+
+
 	m_Player.Velocity.X += m_Player.CurrentShotForce.X * elapsedSec;
 	m_Player.Velocity.Y += m_Player.CurrentShotForce.Y * elapsedSec;
 
@@ -51,16 +91,37 @@ void Game::Update( float elapsedSec )
 	m_Player.CurrentShotForce.X = 0;
 	m_Player.CurrentShotForce.Y = 0;
 
-	if (SCollision::IsOverlapping(
-		Body.WorldCircle, m_Player.Body.WorldCircle,
-		OverlapInfo, m_Player.OverlapInfo))
-	{
-		m_Player.Body.WorldCircle.Center.X += m_Player.OverlapInfo.TranslationVector.X;
-		m_Player.Body.WorldCircle.Center.Y += m_Player.OverlapInfo.TranslationVector.Y;
+	FVector2f hitForce{};
 
-		m_Player.Velocity.X += m_Player.OverlapInfo.TranslationVector.X;
-		m_Player.Velocity.Y += m_Player.OverlapInfo.TranslationVector.Y;
+	for (size_t i = 0; i < m_Enemies.size(); i++)
+	{
+		if (SCollision::IsOverlapping(
+			m_Enemies.at(i).Body.WorldCircle, m_Player.Body.WorldCircle,
+			m_Enemies.at(i).OverlapInfo, m_Player.OverlapInfo))
+		{
+			//Solve for player
+			m_Player.Body.WorldCircle.Center.X += m_Player.OverlapInfo.TranslationVector.X;
+			m_Player.Body.WorldCircle.Center.Y += m_Player.OverlapInfo.TranslationVector.Y;
+
+			m_Player.Velocity.X += m_Player.OverlapInfo.TranslationVector.X;
+			m_Player.Velocity.Y += m_Player.OverlapInfo.TranslationVector.Y;
+
+			//Solve for enemy
+			m_Enemies.at(i).Body.WorldCircle.Center.X += m_Enemies.at(i).OverlapInfo.TranslationVector.X;
+			m_Enemies.at(i).Body.WorldCircle.Center.Y += m_Enemies.at(i).OverlapInfo.TranslationVector.Y;
+
+			hitForce = SVectors::Scale(
+				SVectors::NormalizeVector(m_Enemies.at(i).OverlapInfo.TranslationVector), 
+				m_Player.CollisionImpactForceMagnitude * elapsedSec);
+
+			m_Enemies.at(i).Velocity.X += hitForce.X;
+			m_Enemies.at(i).Velocity.Y += hitForce.Y;
+
+			m_Enemies.at(i).Wounded = true;
+		}
 	}
+
+	
 
 	// --- CAMERA LOGIC --- 
 	
@@ -81,16 +142,32 @@ void Game::Update( float elapsedSec )
 	m_Player.Body.ScreenCircle.Center.X = m_Player.Body.WorldCircle.Center.X + cameraDelta.X;
 	m_Player.Body.ScreenCircle.Center.Y = m_Player.Body.WorldCircle.Center.Y + cameraDelta.Y;
 
-	Body.ScreenCircle.Center.X = Body.WorldCircle.Center.X + cameraDelta.X;
-	Body.ScreenCircle.Center.Y = Body.WorldCircle.Center.Y + cameraDelta.Y;
+
+	for (size_t i = 0; i < m_Enemies.size(); i++)
+	{
+		m_Enemies.at(i).Body.ScreenCircle.Center.X = m_Enemies.at(i).Body.WorldCircle.Center.X + cameraDelta.X;
+		m_Enemies.at(i).Body.ScreenCircle.Center.Y = m_Enemies.at(i).Body.WorldCircle.Center.Y + cameraDelta.Y;
+	}
 
 }
 
 void Game::Draw( ) const
 {
 	ClearBackground( );
-	Body.ScreenCircle.Draw(FColor4i{ 255,0,0,255 }, true);
+
+	for (size_t i = 0; i < m_Enemies.size(); i++)
+	{
+		m_Enemies.at(i).Body.ScreenCircle.Draw(FColor4i{ 255,0,0,255 }, true);
+	}
+
 	m_Player.Body.ScreenCircle.Draw(FColor4i{ 0,255,0,255 }, true);
+	
+	//utils::DrawLine(
+	//	m_Player.Body.ScreenCircle.Center.X,
+	//	m_Player.Body.ScreenCircle.Center.Y,
+	//	m_Player.Body.ScreenCircle.Center.X + m_Player.Velocity.X,
+	//	m_Player.Body.ScreenCircle.Center.Y + m_Player.Velocity.Y,
+	//	5);
 }
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )

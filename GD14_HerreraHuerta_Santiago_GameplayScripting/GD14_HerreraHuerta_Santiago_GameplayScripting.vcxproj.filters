@@ -69,9 +69,6 @@
     <ClCompile Include="UsefulSystems\Math\SVectors.cpp">
       <Filter>Header Files\UsefulSystems\Math</Filter>
     </ClCompile>
-    <ClCompile Include="UsefulSystems\Math\Vector2f.cpp">
-      <Filter>Header Files\UsefulSystems\Math</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UsefulSystems\Collision\SCollision.h">
@@ -99,9 +96,6 @@
       <Filter>Header Files\UsefulSystems\Math</Filter>
     </ClInclude>
     <ClInclude Include="UsefulSystems\Math\SVectors.h">
-      <Filter>Header Files\UsefulSystems\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="UsefulSystems\Math\Vector2f.h">
       <Filter>Header Files\UsefulSystems\Math</Filter>
     </ClInclude>
     <ClInclude Include="UsefulSystems\Structs\FCollision.h">

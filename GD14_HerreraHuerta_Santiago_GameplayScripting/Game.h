@@ -18,12 +18,25 @@ struct FPlayer {
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
 	float ShotForceMagnitude{ 60000 };
+	float CollisionImpactForceMagnitude{ 500 };
 };
 
 struct FCamera {
 
 	float FollowingSpeed{10};
 	FVector2f Position;
+};
+
+struct FEnemy {
+	
+	FCircleCollider Body;
+	FOverlapInfo OverlapInfo;
+	FVector2f Velocity;
+	float FollowingSpeed{10};
+
+	bool Wounded{ false };
+	float MaxWoundedTime{1.f};
+	float CurrentWoundedTime{0.f};
 };
 
 class Game : public BaseGame
@@ -52,8 +65,8 @@ private:
 	FCamera m_Camera{};
 	FPlayer m_Player{};
 
-	FCircleCollider Body;
-	FOverlapInfo OverlapInfo;
+	int m_NumOfEnemies{10};
+	std::vector<FEnemy> m_Enemies;
 
 	// FUNCTIONS
 	void Initialize();

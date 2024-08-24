@@ -12,7 +12,6 @@
 #include "Math/STools.h"
 #include "Math/STrigonometry.h"
 #include "Math/SVectors.h"
-#include "Math/Vector2f.h"
 
 #include "Draw/UAnimation.h"
 #include "Draw/UTexture.h"
