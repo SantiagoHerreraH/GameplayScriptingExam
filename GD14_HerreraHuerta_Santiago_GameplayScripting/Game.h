@@ -12,19 +12,33 @@ struct FCircleCollider {
 
 struct FPlayer {
 
+	bool PressingUp{ false };
+	bool PressingDown{ false };
+	bool PressingLeft{ false };
+	bool PressingRight{ false };
+
+	float MaxShieldRadius{20.f};
+	float MinShieldRadius{0.f};
 	FCircleCollider Shield;
 	FOverlapInfo ShieldOverlapInfo;
-	float ShieldDistanceFromBodyCenter{ 100 };
+	float ShieldDistanceFromBodyCenter{ 10 };
+	bool ShieldCollided{false};
+	bool ShieldActivated{false};
+	bool ShieldReadyForDeactivation{ true };
+	float MaxShieldActivationTime{0.5f};
+	float CurrentShieldActivationTime{0.f};
 
 	FCircleCollider Body;
 	FOverlapInfo BodyOverlapInfo;
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
 
-	float MovementSpeed{ 50000 };
+	float Gravity{1000};
+	float MovementSpeed{ 40000 };
+	float JumpSpeed{ 70000 };
 
 	float MaxPlayerVelocityPerSecond{ 1000 };
-	float ShotForceMagnitude{ 60000 };
+	float DashForceMagnitude{ 60000 };
 	float CollisionImpactForceMagnitude{ 500 };
 
 	bool Wounded{ false };
@@ -33,6 +47,8 @@ struct FPlayer {
 
 	int MaxLife{ 3 };
 	int CurrentLife{ 3 };
+
+
 };
 
 struct FBullet {
@@ -50,6 +66,14 @@ struct FCamera {
 
 struct FEnemy {
 	
+	int CurrentLife{3};
+	int MaxLife{3};
+	float CurrentDeathTime{ 0.f };
+	float MaxDeathTime{1.f};
+
+
+	float MaxBodyRadius{50};
+	float MinBodyRadius{0};
 	FCircleCollider Body;
 	FOverlapInfo BodyOverlapInfo;
 	FVector2f Velocity;
@@ -90,7 +114,7 @@ private:
 	FColor4i m_PlayerNormalColor{ 0,255,0,255 };
 	FPlayer m_Player{};
 
-	int m_NumOfEnemies{1};
+	int m_NumOfEnemies{10};
 	FColor4i m_EnemyWoundedColor{255,0,255,255};
 	FColor4i m_EnemyNormalColor{ 255,0,0,255 };
 	std::vector<FEnemy> m_Enemies;
