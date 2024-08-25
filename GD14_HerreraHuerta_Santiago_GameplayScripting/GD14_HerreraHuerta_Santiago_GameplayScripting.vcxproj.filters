@@ -69,6 +69,12 @@
     <ClCompile Include="UsefulSystems\Math\SVectors.cpp">
       <Filter>Header Files\UsefulSystems\Math</Filter>
     </ClCompile>
+    <ClCompile Include="UPlayer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UBullet.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="UsefulSystems\Collision\SCollision.h">
@@ -127,6 +133,12 @@
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="UPlayer.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="UBullet.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

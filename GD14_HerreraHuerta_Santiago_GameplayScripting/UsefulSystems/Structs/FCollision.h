@@ -16,6 +16,12 @@ namespace Pillar {
 		IgnoreAll
 	};
 
+	struct FCircleCollider {
+
+		FCirclef WorldCircle;
+		FCirclef ScreenCircle;
+	};
+
 	struct FRectCollider {
 		FRectCollider() {}
 		explicit FRectCollider(float left, float top, float width, float height) :

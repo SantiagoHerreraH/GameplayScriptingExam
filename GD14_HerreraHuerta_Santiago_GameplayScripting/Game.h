@@ -1,95 +1,11 @@
 #pragma once
 #include "BaseGame.h"
 #include "UsefulSystems/Includes.h"
+#include "UPlayer.h"
+#include "UBullet.h"
 
 using namespace Pillar;
 
-struct FCircleCollider {
-
-	FCirclef WorldCircle;
-	FCirclef ScreenCircle;
-};
-
-struct FHealthBar {
-
-
-	FColor4i FillColor{0, 255, 0, 255};
-	FColor4i CellColor{255, 255 , 255 , 255 };
-	float CellLineThickness{5};
-	FVector2f Position{};
-	FVector2f Size{};
-
-	void Draw(int currentLife, int maxLife) const{
-
-		if (currentLife < 0 || maxLife <= 0)
-		{
-			return;
-		}
-
-		float oneCellRatio{ Size.X / (float)maxLife };
-		float healthRatio{ currentLife / (float)maxLife };
-		FRectf oneHealth{ Position.X, Position.Y, oneCellRatio, Size.Y};
-		FRectf currentHealth{ Position.X, Position.Y, Size.X * healthRatio, Size.Y };
-
-		currentHealth.Draw(FillColor, true, false );
-
-		for (int i = 0; i < maxLife; i++)
-		{
-			oneHealth.Draw(CellColor, false, false, CellLineThickness);
-			oneHealth.Left += oneCellRatio;
-		}
-	}
-};
-
-struct FPlayer {
-
-	FHealthBar HealthBar;
-
-	bool PressingUp{ false };
-	bool PressingDown{ false };
-	bool PressingLeft{ false };
-	bool PressingRight{ false };
-
-	float MaxShieldRadius{20.f};
-	float MinShieldRadius{0.f};
-	FCircleCollider Shield;
-	FOverlapInfo ShieldOverlapInfo;
-	float ShieldDistanceFromBodyCenter{ 10 };
-	bool ShieldCollided{false};
-	bool ShieldActivated{false};
-	bool ShieldReadyForDeactivation{ true };
-	float MaxShieldActivationTime{0.5f};
-	float CurrentShieldActivationTime{0.f};
-
-	FCircleCollider Body;
-	FOverlapInfo BodyOverlapInfo;
-	FVector2f Velocity;
-	FVector2f CurrentShotForce;
-
-	float Gravity{};//{1000};
-	float MovementSpeed{ 40000 };
-	float JumpSpeed{ 70000 };
-
-	float MaxPlayerVelocityPerSecond{ 1000 };
-	float DashForceMagnitude{ 60000 };
-	float CollisionImpactForceMagnitude{ 500 };
-
-	bool Wounded{ false };
-	float CurrentWoundedTime{};
-	float MaxWoundedTime{1.f};
-
-	int MaxLife{ 3 };
-	int CurrentLife{ 3 };
-
-
-};
-
-struct FBullet {
-	FCircleCollider Body;
-	FVector2f Velocity;
-	bool Spawned{ false };
-	float CurrentBulletTimeSpawned{ 0.f };
-};
 
 struct FCamera {
 
@@ -97,26 +13,7 @@ struct FCamera {
 	FVector2f Position;
 };
 
-struct FEnemy {
-	
-	int CurrentLife{3};
-	int MaxLife{3};
-	float CurrentDeathTime{ 0.f };
-	float MaxDeathTime{1.f};
 
-
-	float MaxHealthBodyRadius{20};
-	float MinHealthBodyRadius{ 10 };
-	float MinBodyRadius{0};
-	FCircleCollider Body;
-	FOverlapInfo BodyOverlapInfo;
-	FVector2f Velocity;
-	float FollowingSpeed{500};
-
-	bool Wounded{ false };
-	float MaxWoundedTime{1.f};
-	float CurrentWoundedTime{0.f};
-};
 
 struct FLevelManager {
 	
@@ -126,6 +23,22 @@ struct FLevelManager {
 	std::vector<FRectCollider> LevelCollisions;
 
 };
+
+//TO DOS
+/*
+- implement all bullet behaviour
+- implement enemy behaviour
+- implement pick ups
+
+Bullets
+Two types of bullets
+Movement
+Ones that go towards you
+Others that go in a straight line
+Ones that are static.
+Ones that are only in the wounded state.
+
+*/
 
 class Game : public BaseGame
 {
@@ -153,18 +66,26 @@ private:
 	FCamera m_Camera{};
 	FVector2f m_CurrentMouseScreenPosition{};
 
-	FColor4i m_PlayerWoundedColor{ 255,100,100,255 };
-	FColor4i m_PlayerNormalColor{ 0,255,0,255 };
-	FPlayer m_Player{};
+	UPlayer m_Player{};
 
-	int m_NumOfEnemies{0};
-	FColor4i m_EnemyWoundedColor{255,0,255,255};
-	FColor4i m_EnemyNormalColor{ 255,0,0,255 };
-	std::vector<FEnemy> m_Enemies;
+	int m_NumOfBullets{0};
+	
+	std::vector<FBullet> m_Bullets;
 
-	FRectCollider m_RectTest{};
+	//FRectCollider m_RectTest{};
+	std::vector<FRectCollider> m_CurrentLevel;
 
 	FCircleCollider m_Bounds;
+
+	void CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol, int bulletNumber, const FBullet& bulletType);
+	void CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints, int bulletNumber, const FBullet& bulletType);
+	void CreateFollowingEnemy(int maxLife, int bulletNumber, const FBullet& bulletType);
+
+	FBullet CreateUniDirectionalBullet(int MaxLife);
+	FBullet CreateFollowingBullet(int maxLife);
+	FBullet CreateStaticBullet(int maxLife, const FVector2f& position, bool alwaysWounded );
+	FBullet CreateMovableBullet(int maxLife, const FVector2f& position);
+
 
 	// FUNCTIONS
 	void Initialize();

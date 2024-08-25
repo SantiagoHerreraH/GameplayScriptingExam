@@ -151,6 +151,8 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="UBullet.cpp" />
+    <ClCompile Include="UPlayer.cpp" />
     <ClCompile Include="UsefulSystems\Collision\SCollision.cpp" />
     <ClCompile Include="UsefulSystems\Draw\UAnimation.cpp" />
     <ClCompile Include="UsefulSystems\Draw\UTexture.cpp" />
@@ -164,6 +166,8 @@ xcopy "$(SolutionDir)Resources\*.*" "$(TargetDir)" /y /d /s</Command>
   <ItemGroup>
     <ClInclude Include="Game.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="UBullet.h" />
+    <ClInclude Include="UPlayer.h" />
     <ClInclude Include="UsefulSystems\Collision\SCollision.h" />
     <ClInclude Include="UsefulSystems\Draw\UAnimation.h" />
     <ClInclude Include="UsefulSystems\Draw\UTexture.h" />
