@@ -10,7 +10,40 @@ struct FCircleCollider {
 	FCirclef ScreenCircle;
 };
 
+struct FHealthBar {
+
+
+	FColor4i FillColor{0, 255, 0, 255};
+	FColor4i CellColor{255, 255 , 255 , 255 };
+	float CellLineThickness{5};
+	FVector2f Position{};
+	FVector2f Size{};
+
+	void Draw(int currentLife, int maxLife) const{
+
+		if (currentLife < 0 || maxLife <= 0)
+		{
+			return;
+		}
+
+		float oneCellRatio{ Size.X / (float)maxLife };
+		float healthRatio{ currentLife / (float)maxLife };
+		FRectf oneHealth{ Position.X, Position.Y, oneCellRatio, Size.Y};
+		FRectf currentHealth{ Position.X, Position.Y, Size.X * healthRatio, Size.Y };
+
+		currentHealth.Draw(FillColor, true);
+
+		for (int i = 0; i < maxLife; i++)
+		{
+			oneHealth.Draw(CellColor, false, CellLineThickness);
+			oneHealth.Left += oneCellRatio;
+		}
+	}
+};
+
 struct FPlayer {
+
+	FHealthBar HealthBar;
 
 	bool PressingUp{ false };
 	bool PressingDown{ false };
@@ -72,7 +105,7 @@ struct FEnemy {
 	float MaxDeathTime{1.f};
 
 
-	float MaxBodyRadius{50};
+	float MaxBodyRadius{10};
 	float MinBodyRadius{0};
 	FCircleCollider Body;
 	FOverlapInfo BodyOverlapInfo;

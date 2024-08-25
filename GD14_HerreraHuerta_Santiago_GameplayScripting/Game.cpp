@@ -37,6 +37,10 @@ void Game::Initialize( )
 	m_Player.Shield.WorldCircle.Radius = m_Player.MaxShieldRadius;
 	m_Player.Shield.ScreenCircle = m_Player.Shield.WorldCircle;
 
+	m_Player.HealthBar.Size = FVector2f{ 200,50 };
+	m_Player.HealthBar.Position = FVector2f{ 30, GetViewPort().height - m_Player.HealthBar.Size.Y - 10};
+	
+
 	m_Camera.Position = m_Player.Body.WorldCircle.Center;
 }
 
@@ -412,6 +416,7 @@ void Game::Draw( ) const
 	ClearBackground( );
 
 	m_Bounds.ScreenCircle.Draw(FColor4i{0,0,255,255}, true);
+	m_Player.HealthBar.Draw(m_Player.CurrentLife, m_Player.MaxLife);
 
 	for (size_t i = 0; i < m_Enemies.size(); i++)
 	{
