@@ -19,10 +19,10 @@ namespace Pillar {
 	struct FRectCollider {
 		FRectCollider() {}
 		explicit FRectCollider(float left, float top, float width, float height) :
-			OriginalRect(left, top, width, height),
-			CurrentRect(left, top, width, height) {}
-		FRectf OriginalRect{};
-		FRectf CurrentRect{};
+			WorldRect(left, top, width, height),
+			ScreenRect(left, top, width, height) {}
+		FRectf WorldRect{};
+		FRectf ScreenRect{};
 	};
 
 	struct FLineOverlapInfo {

@@ -249,6 +249,100 @@ namespace Pillar {
 		return outOverlapInfoRect1.isOverlapping;
 	}
 
+	bool SCollision::IsOverlapping(const FCirclef& circle, const FRectf& rect, bool isYInverted)
+	{
+		// temporary variables to set edges for testing
+		float testX = circle.Center.X;
+		float testY = circle.Center.Y;
+
+		// which edge is closest?
+		if (circle.Center.X < rect.Left)         testX = rect.Left;      // test left edge
+		else if (circle.Center.X > rect.Left + rect.Width) testX = rect.Left + rect.Width;   // right edge
+
+		if (isYInverted)
+		{
+			if (circle.Center.Y < rect.Top)         testY = rect.Top;      // top edge
+			else if (circle.Center.Y > rect.Top + rect.Height) testY = rect.Top + rect.Height;   // bottom edge
+		}
+		else
+		{
+			if (circle.Center.Y < rect.Top)         testY = rect.Top;      // top edge
+			else if (circle.Center.Y > rect.Top - rect.Height) testY = rect.Top - rect.Height;   // bottom edge
+		}
+
+
+		// get distance from closest edges
+		float distX = circle.Center.X - testX;
+		float distY = circle.Center.Y - testY;
+		float distance = sqrt((distX * distX) + (distY * distY));
+
+		// if the distance is less than the radius, collision!
+		if (distance <= circle.Radius) {
+			return true;
+		}
+		return false;
+	}
+
+	bool SCollision::IsOverlapping(const FCirclef& circle, const FRectf& rect, FOverlapInfo& outOverlapInfo1, bool isYInverted)
+	{
+		// temporary variables to set edges for testing
+		float testX = circle.Center.X;
+		float testY = circle.Center.Y;
+
+		// which edge is closest?
+		if (circle.Center.X < rect.Left)         testX = rect.Left;      // test left edge
+		else if (circle.Center.X > rect.Left + rect.Width) testX = rect.Left + rect.Width;   // right edge
+
+		if (isYInverted)
+		{
+			if (circle.Center.Y < rect.Top)         testY = rect.Top;      // top edge
+			else if (circle.Center.Y > (rect.Top + rect.Height)) testY = rect.Top + rect.Height;   // bottom edge
+		}
+		else
+		{
+			if (circle.Center.Y > rect.Top)         testY = rect.Top;      // top edge
+			else if (circle.Center.Y < (rect.Top - rect.Height)) testY = rect.Top - rect.Height;   // bottom edge
+		}
+
+
+		// get distance from closest edges
+		float distX = circle.Center.X - testX;
+		float distY = circle.Center.Y - testY;
+		float distance = sqrt((distX * distX) + (distY * distY));
+
+		//NOT IMPORTANT:
+		//outOverlapInfo1.isOverlapping = true;
+		//outOverlapInfo1.IntersectionPoint;
+		//outOverlapInfo1.OtherIsOptimized;
+		//outOverlapInfo1.DirectionOfCollided;
+		 
+		
+		// if the distance is less than the radius, collision!
+		if (distance <= circle.Radius) {
+
+			float relativeRadiusX{ distX > 0 ? circle.Radius : -circle.Radius };
+			float relativeRadiusY{ distY > 0 ? circle.Radius : -circle.Radius };
+
+			float deltaX{ relativeRadiusX - distX };
+			float deltaY{ relativeRadiusY - distY };
+
+			if (abs(deltaX) < abs(deltaY))
+			{
+				outOverlapInfo1.TranslationVector.X = deltaX;
+				outOverlapInfo1.TranslationVector.Y = 0;
+			}
+			else
+			{
+				outOverlapInfo1.TranslationVector.Y = deltaY;
+				outOverlapInfo1.TranslationVector.X = 0;
+			}
+			
+
+			return true;
+		}
+		return false;
+	}
+
 #pragma endregion
 
 #pragma region IsOverlappingRect
@@ -399,9 +493,9 @@ namespace Pillar {
 	void SCollision::SolveIfIsOverlapping(
 		FRectf& rect1, FRectf& rect2, 
 		FOverlapInfo& outOverlapInfo1, FOverlapInfo& outOverlapInfo2,
-		float deltaSeconds, float translationLengthToSmoothTranslation)
+		float deltaSeconds, bool isYInverted, float translationLengthToSmoothTranslation)
 	{
-		if (IsOverlapping(rect1, rect2, outOverlapInfo1, outOverlapInfo2))
+		if (IsOverlapping(rect1, rect2, outOverlapInfo1, outOverlapInfo2, isYInverted))
 		{
 			SolveCollision(rect1, outOverlapInfo1, deltaSeconds, translationLengthToSmoothTranslation);
 			SolveCollision(rect2, outOverlapInfo2, deltaSeconds, translationLengthToSmoothTranslation);
@@ -413,9 +507,9 @@ namespace Pillar {
 		FVector2f& position1, FVector2f& position2,
 		FVector2f& velocity1, FVector2f& velocity2,
 		FOverlapInfo& outOverlapInfo1, FOverlapInfo& outOverlapInfo2, 
-		float deltaSeconds, float translationLengthToSmoothTranslation)
+		float deltaSeconds, bool isYInverted, float translationLengthToSmoothTranslation)
 	{
-		if (IsOverlapping(rect1, rect2, outOverlapInfo1, outOverlapInfo2))
+		if (IsOverlapping(rect1, rect2, outOverlapInfo1, outOverlapInfo2, isYInverted))
 		{
 			SolveCollision(position1, outOverlapInfo1, deltaSeconds, translationLengthToSmoothTranslation);
 			SolveCollision(position2, outOverlapInfo2, deltaSeconds, translationLengthToSmoothTranslation);

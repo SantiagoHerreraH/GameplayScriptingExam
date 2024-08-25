@@ -127,7 +127,7 @@ namespace Pillar {
 		Type Width;
 		Type Height;
 
-		void Draw(const FColor4i color, bool fill, float lineWidth = 1)const {
+		void Draw(const FColor4i color, bool fill, bool isYInverted, float lineWidth = 1)const {
 			
 			glColor4f(
 				color.GetR() / (float)color.MAXVALUE,
@@ -142,8 +142,15 @@ namespace Pillar {
 				{
 					glVertex2f(Left, Top);
 					glVertex2f(Left + Width, Top);
-					glVertex2f(Left + Width, Top + Height);
-					glVertex2f(Left, Top + Height);
+					if (isYInverted)
+					{
+						glVertex2f(Left + Width, Top + Height);
+					}
+					else
+					{
+						glVertex2f(Left + Width, Top - Height);
+						glVertex2f(Left, Top - Height);
+					}
 				}
 				glEnd();
 			}
@@ -154,8 +161,16 @@ namespace Pillar {
 				{
 					glVertex2f(Left, Top);
 					glVertex2f(Left + Width, Top);
-					glVertex2f(Left + Width, Top + Height);
-					glVertex2f(Left, Top + Height);
+					if (isYInverted)
+					{
+						glVertex2f(Left + Width, Top + Height);
+						glVertex2f(Left, Top + Height);
+					}
+					else
+					{
+						glVertex2f(Left + Width, Top - Height);
+						glVertex2f(Left, Top - Height);
+					}
 				}
 				glEnd();
 			}

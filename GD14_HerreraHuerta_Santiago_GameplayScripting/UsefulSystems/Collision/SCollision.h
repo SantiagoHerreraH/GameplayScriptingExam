@@ -54,10 +54,16 @@ namespace Pillar {
 			const FCirclef& circle1, const FCirclef& circle2, 
 			FOverlapInfo& outOverlapInfoRect1, FOverlapInfo& outOverlapInfoRect2);
 
-		static bool IsOverlapping(const FRecti& rect1, const FRecti& rect2, bool isYInverted = true);
-		static bool IsOverlapping(const FRectf& rect1, const FRectf& rect2, bool isYInverted = true);
+		static bool IsOverlapping(
+			const FCirclef& circle, const FRectf& rect, bool isYInverted);
+		static bool IsOverlapping(
+			const FCirclef& circle, const FRectf& rect,
+			FOverlapInfo& outOverlapInfo, bool isYInverted);
 
-		static bool IsOverlapping(const FRectf& rect1, const FRectf& rect2, FOverlapInfo& outOverlapInfoRect1, FOverlapInfo& outOverlapInfoRect2, bool isYInverted = true);
+		static bool IsOverlapping(const FRecti& rect1, const FRecti& rect2, bool isYInverted);
+		static bool IsOverlapping(const FRectf& rect1, const FRectf& rect2, bool isYInverted);
+
+		static bool IsOverlapping(const FRectf& rect1, const FRectf& rect2, FOverlapInfo& outOverlapInfoRect1, FOverlapInfo& outOverlapInfoRect2, bool isYInverted);
 
 		static void SolveCollision(FRectf& rect, const FOverlapInfo& overlapInfo, float deltaSeconds, float translationLengthToSmoothTranslation = 3.f);
 		static void SolveCollision(FVector2f& position, const FOverlapInfo& overlapInfo, float deltaSeconds, float translationLengthToSmoothTranslation = 3.f);
@@ -67,14 +73,14 @@ namespace Pillar {
 		static void SolveIfIsOverlapping(
 			FRectf& rect1, FRectf& rect2,
 			FOverlapInfo& outOverlapInfo1, FOverlapInfo& outOverlapInfo2,
-			float deltaSeconds, float translationLengthToSmoothTranslation = 3.f);
+			float deltaSeconds, bool isYInverted, float translationLengthToSmoothTranslation = 3.f);
 
 		static void SolveIfIsOverlapping(
 			FRectf& rect1, FRectf& rect2,
 			FVector2f& position1, FVector2f& position2,
 			FVector2f& velocity1, FVector2f& velocity2,
 			FOverlapInfo& outOverlapInfo1, FOverlapInfo& outOverlapInfo2,
-			float deltaSeconds, float translationLengthToSmoothTranslation = 3.f);
+			float deltaSeconds, bool isYInverted, float translationLengthToSmoothTranslation = 3.f);
 
 		static void ApplySticky(float& velocityAxisToAffect, float stickyVelocityAxis);
 	};

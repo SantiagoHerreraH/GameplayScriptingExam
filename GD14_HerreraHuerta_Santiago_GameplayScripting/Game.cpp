@@ -15,6 +15,12 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
+	m_RectTest.WorldRect.Height = 100;
+	m_RectTest.WorldRect.Width = 1000;
+	m_RectTest.WorldRect.Left = -100;
+	m_RectTest.WorldRect.Top = -100;
+	m_RectTest.ScreenRect = m_RectTest.WorldRect;
+
 	m_Enemies.resize(m_NumOfEnemies);
 
 	m_Bounds.WorldCircle.Radius = 1000;
@@ -22,7 +28,7 @@ void Game::Initialize( )
 
 	for (size_t i = 0; i < m_Enemies.size(); i++)
 	{
-		m_Enemies.at(i).Body.WorldCircle.Radius = 50;
+		m_Enemies.at(i).Body.WorldCircle.Radius = m_Enemies.at(i).MaxHealthBodyRadius;
 		m_Enemies.at(i).Body.WorldCircle.Center = 
 			FVector2f{ 
 			(float)STools::GetRandomBetweenRange(0,GetViewPort().width),
@@ -112,7 +118,7 @@ void Game::Update( float elapsedSec )
 
 			m_Enemies.at(i).Body.WorldCircle.Radius =
 				STools::CalculateLerpValue(
-					m_Enemies.at(i).MaxBodyRadius,
+					m_Enemies.at(i).MinHealthBodyRadius,
 					m_Enemies.at(i).MinBodyRadius,
 					m_Enemies.at(i).CurrentDeathTime / m_Enemies.at(i).MaxDeathTime);
 
@@ -123,7 +129,7 @@ void Game::Update( float elapsedSec )
 				m_Enemies.at(i).CurrentDeathTime = 0;
 				m_Enemies.at(i).CurrentLife = m_Enemies.at(i).MaxLife;
 				m_Enemies.at(i).Body.WorldCircle.Center = m_Bounds.WorldCircle.Center;
-				m_Enemies.at(i).Body.WorldCircle.Radius = m_Enemies.at(i).MaxBodyRadius;
+				m_Enemies.at(i).Body.WorldCircle.Radius = m_Enemies.at(i).MaxHealthBodyRadius;
 				m_Enemies.at(i).Body.ScreenCircle = m_Enemies.at(i).Body.WorldCircle;
 			}
 		}
@@ -323,6 +329,12 @@ void Game::Update( float elapsedSec )
 						m_Enemies.at(i).CurrentWoundedTime = 0;
 						m_Enemies.at(i).CurrentLife -= 1;
 						m_Enemies.at(i).CurrentDeathTime = 0.f;
+						m_Enemies.at(i).Body.WorldCircle.Radius = 
+							STools::CalculateLerpValue(
+								m_Enemies.at(i).MaxHealthBodyRadius,
+								m_Enemies.at(i).MinHealthBodyRadius, 
+								m_Enemies.at(i).CurrentLife/ (float)m_Enemies.at(i).MaxLife);
+						m_Enemies.at(i).Body.ScreenCircle.Radius = m_Enemies.at(i).Body.WorldCircle.Radius;
 					}
 
 					//Solve for enemy two
@@ -342,12 +354,19 @@ void Game::Update( float elapsedSec )
 						m_Enemies.at(j).CurrentWoundedTime = 0;
 						m_Enemies.at(j).CurrentLife -= 1;
 						m_Enemies.at(j).CurrentDeathTime = 0.f;
+						m_Enemies.at(i).Body.WorldCircle.Radius =
+							STools::CalculateLerpValue(
+								m_Enemies.at(i).MaxHealthBodyRadius,
+								m_Enemies.at(i).MinHealthBodyRadius,
+								m_Enemies.at(i).CurrentLife / (float)m_Enemies.at(i).MaxLife);
+						m_Enemies.at(i).Body.ScreenCircle.Radius = m_Enemies.at(i).Body.WorldCircle.Radius;
 					}
 				}
 			}
 		}
 	}
 	
+	//BOUNDS COLLISION
 	FVector2f boundCenterToPlayerCenter{ 
 		SVectors::Subtract(
 			m_Bounds.WorldCircle.Center,
@@ -367,6 +386,23 @@ void Game::Update( float elapsedSec )
 
 		m_Player.Velocity.X += hitForce.X;
 		m_Player.Velocity.Y += hitForce.Y;
+	}
+
+	//RECT COLLISION
+
+	//TEMP LOGIC
+	if (SCollision::IsOverlapping(m_Player.Body.WorldCircle, m_RectTest.WorldRect, m_Player.BodyOverlapInfo, false))
+	{
+		m_Player.Body.WorldCircle.Center.X += m_Player.BodyOverlapInfo.TranslationVector.X;
+		m_Player.Body.WorldCircle.Center.Y += m_Player.BodyOverlapInfo.TranslationVector.Y;
+		
+		m_Player.Velocity.X += m_Player.BodyOverlapInfo.TranslationVector.X;
+		m_Player.Velocity.Y += m_Player.BodyOverlapInfo.TranslationVector.Y;
+		//m_Player.Wounded = true;
+	}
+	else
+	{
+		//m_Player.Wounded = false;
 	}
 
 	// --- CAMERA LOGIC --- 
@@ -403,6 +439,9 @@ void Game::Update( float elapsedSec )
 	m_Bounds.ScreenCircle.Center.X = m_Bounds.WorldCircle.Center.X + cameraDelta.X;
 	m_Bounds.ScreenCircle.Center.Y = m_Bounds.WorldCircle.Center.Y + cameraDelta.Y;
 
+	m_RectTest.ScreenRect.Left = m_RectTest.WorldRect.Left + cameraDelta.X;
+	m_RectTest.ScreenRect.Top = m_RectTest.WorldRect.Top + cameraDelta.Y;
+
 	for (size_t i = 0; i < m_Enemies.size(); i++)
 	{
 		m_Enemies.at(i).Body.ScreenCircle.Center.X = m_Enemies.at(i).Body.WorldCircle.Center.X + cameraDelta.X;
@@ -430,6 +469,8 @@ void Game::Draw( ) const
 		}
 		
 	}
+
+	m_RectTest.ScreenRect.Draw(FColor4i{ 255,255,255,255 }, true, false);
 
 	if (m_Player.Wounded)
 	{

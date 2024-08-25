@@ -31,11 +31,11 @@ struct FHealthBar {
 		FRectf oneHealth{ Position.X, Position.Y, oneCellRatio, Size.Y};
 		FRectf currentHealth{ Position.X, Position.Y, Size.X * healthRatio, Size.Y };
 
-		currentHealth.Draw(FillColor, true);
+		currentHealth.Draw(FillColor, true, false );
 
 		for (int i = 0; i < maxLife; i++)
 		{
-			oneHealth.Draw(CellColor, false, CellLineThickness);
+			oneHealth.Draw(CellColor, false, false, CellLineThickness);
 			oneHealth.Left += oneCellRatio;
 		}
 	}
@@ -66,7 +66,7 @@ struct FPlayer {
 	FVector2f Velocity;
 	FVector2f CurrentShotForce;
 
-	float Gravity{1000};
+	float Gravity{};//{1000};
 	float MovementSpeed{ 40000 };
 	float JumpSpeed{ 70000 };
 
@@ -105,7 +105,8 @@ struct FEnemy {
 	float MaxDeathTime{1.f};
 
 
-	float MaxBodyRadius{10};
+	float MaxHealthBodyRadius{20};
+	float MinHealthBodyRadius{ 10 };
 	float MinBodyRadius{0};
 	FCircleCollider Body;
 	FOverlapInfo BodyOverlapInfo;
@@ -115,6 +116,15 @@ struct FEnemy {
 	bool Wounded{ false };
 	float MaxWoundedTime{1.f};
 	float CurrentWoundedTime{0.f};
+};
+
+struct FLevelManager {
+	
+	std::string GeneralLevelString{};
+	int NumberOfLevels{};
+	int CurrentLevel{};
+	std::vector<FRectCollider> LevelCollisions;
+
 };
 
 class Game : public BaseGame
@@ -147,10 +157,12 @@ private:
 	FColor4i m_PlayerNormalColor{ 0,255,0,255 };
 	FPlayer m_Player{};
 
-	int m_NumOfEnemies{10};
+	int m_NumOfEnemies{0};
 	FColor4i m_EnemyWoundedColor{255,0,255,255};
 	FColor4i m_EnemyNormalColor{ 255,0,0,255 };
 	std::vector<FEnemy> m_Enemies;
+
+	FRectCollider m_RectTest{};
 
 	FCircleCollider m_Bounds;
 

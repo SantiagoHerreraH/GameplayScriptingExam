@@ -26,14 +26,14 @@ namespace Pillar {
 
 		void ApplyRectTransformation(FRectCollider& rectCollider) {
 
-			float rotatedHeight{ rectCollider.OriginalRect.Height * cosf(SAngles::InRadians(RotationX)) };
-			float rotatedWidth{ rectCollider.OriginalRect.Width * cosf(SAngles::InRadians(RotationY)) };
+			float rotatedHeight{ rectCollider.WorldRect.Height * cosf(SAngles::InRadians(RotationX)) };
+			float rotatedWidth{ rectCollider.WorldRect.Width * cosf(SAngles::InRadians(RotationY)) };
 
-			rectCollider.CurrentRect.Top = std::round((rectCollider.OriginalRect.Top * Scale.Y) + Position.Y);
-			rectCollider.CurrentRect.Left = std::round((rectCollider.OriginalRect.Left * Scale.X) + Position.X);
+			rectCollider.ScreenRect.Top = std::round((rectCollider.WorldRect.Top * Scale.Y) + Position.Y);
+			rectCollider.ScreenRect.Left = std::round((rectCollider.WorldRect.Left * Scale.X) + Position.X);
 
-			rectCollider.CurrentRect.Height = std::round(abs(rotatedHeight) * Scale.Y);
-			rectCollider.CurrentRect.Width = std::round(abs(rotatedWidth) * Scale.X);
+			rectCollider.ScreenRect.Height = std::round(abs(rotatedHeight) * Scale.Y);
+			rectCollider.ScreenRect.Width = std::round(abs(rotatedWidth) * Scale.X);
 		}
 
 		FVector2f Position{};
