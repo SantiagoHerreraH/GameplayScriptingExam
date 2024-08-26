@@ -54,6 +54,7 @@ namespace Pillar {
 		FOverlapInfo m_BodyOverlapInfo;
 		FVector2f m_Velocity;
 
+		FVector2f CurrentFollowingOffset;
 		bool SenseBound{ false };
 		FCircleCollider Sense;
 

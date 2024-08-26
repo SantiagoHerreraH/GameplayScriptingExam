@@ -63,7 +63,7 @@ void Game::Update( float deltaSeconds )
 			}
 		}
 
-		if (m_Bullets.at(i).CurrentLife <= 0 && !m_Bullets.at(i).AlwaysWounded)
+		if ((m_Bullets.at(i).CurrentLife <= 0) && !m_Bullets.at(i).AlwaysWounded)
 		{
 
 			m_Bullets.at(i).CurrentDeathTime += elapsedSec;
@@ -117,14 +117,16 @@ void Game::Update( float deltaSeconds )
 							deltaToPlayer),
 							SVectors::Length(deltaToPlayer) - m_Bullets.at(i).DistanceToKeepFromPlayer);
 
-					followingOffset =
+					m_Bullets.at(i).CurrentFollowingOffset =
 						SVectors::Scale(SVectors::NormalizeVector(followingOffset),
 							m_Bullets.at(i).FollowingSpeed);
 
-					m_Bullets.at(i).m_Velocity.X = followingOffset.X * elapsedSec;
-					m_Bullets.at(i).m_Velocity.Y = followingOffset.Y * elapsedSec;
+
+					m_Bullets.at(i).m_Velocity.X = m_Bullets.at(i).CurrentFollowingOffset.X * elapsedSec;
+					m_Bullets.at(i).m_Velocity.Y = m_Bullets.at(i).CurrentFollowingOffset.Y * elapsedSec;
 				}
 				
+
 			}
 			else if (m_Bullets.at(i).BulletBehaviour == EBulletBehaviour::MoveStraightInCustomMovement)
 			{
@@ -241,7 +243,7 @@ void Game::Update( float deltaSeconds )
 		{
 			for (size_t j = i + 1; j < m_Bullets.size(); j++)
 			{
-				if (m_Bullets.at(i).Wounded || m_Bullets.at(j).Wounded)
+				if ((m_Bullets.at(i).Wounded || m_Bullets.at(i).AlwaysWounded) || (m_Bullets.at(j).Wounded || m_Bullets.at(j).AlwaysWounded))
 				{
 					if (SCollision::IsOverlapping(
 						m_Bullets.at(i).m_Body.WorldCircle, m_Bullets.at(j).m_Body.WorldCircle,
@@ -263,7 +265,7 @@ void Game::Update( float deltaSeconds )
 
 						
 
-						if ((!m_Bullets.at(i).Wounded || m_Bullets.at(j).IsStatic) && !m_Bullets.at(i).AlwaysWounded)
+						if ((!m_Bullets.at(i).Wounded || m_Bullets.at(j).IsStatic || m_Bullets.at(j).AlwaysWounded) && !m_Bullets.at(i).AlwaysWounded)
 						{
 							m_Bullets.at(i).Wounded = true;
 							m_Bullets.at(i).CurrentWoundedTime = 0;
@@ -292,7 +294,7 @@ void Game::Update( float deltaSeconds )
 						}
 						
 
-						if ((!m_Bullets.at(j).Wounded || m_Bullets.at(i).IsStatic) && !m_Bullets.at(j).AlwaysWounded)
+						if ((!m_Bullets.at(j).Wounded || m_Bullets.at(i).IsStatic || m_Bullets.at(i).AlwaysWounded) && !m_Bullets.at(j).AlwaysWounded)
 						{
 							m_Bullets.at(j).Wounded = true;
 							m_Bullets.at(j).CurrentWoundedTime = 0;
@@ -399,11 +401,11 @@ void Game::Update( float deltaSeconds )
 
 			if (m_Bullets.at(i).SenseBound)
 			{
-				m_Bullets.at(i).m_Body.WorldCircle.Center.X	= m_Bullets.at(i).m_Body.WorldCircle.Center.X;
-				m_Bullets.at(i).m_Body.WorldCircle.Center.Y	= m_Bullets.at(i).m_Body.WorldCircle.Center.Y;
+				m_Bullets.at(i).Sense.WorldCircle.Center.X	= m_Bullets.at(i).m_Body.WorldCircle.Center.X;
+				m_Bullets.at(i).Sense.WorldCircle.Center.Y	= m_Bullets.at(i).m_Body.WorldCircle.Center.Y;
 
-				m_Bullets.at(i).Sense.ScreenCircle.Center.X = m_Bullets.at(i).m_Body.WorldCircle.Center.X + cameraDelta.X;
-				m_Bullets.at(i).Sense.ScreenCircle.Center.Y = m_Bullets.at(i).m_Body.WorldCircle.Center.Y + cameraDelta.Y;
+				m_Bullets.at(i).Sense.ScreenCircle.Center.X = m_Bullets.at(i).Sense.WorldCircle.Center.X + cameraDelta.X;
+				m_Bullets.at(i).Sense.ScreenCircle.Center.Y = m_Bullets.at(i).Sense.WorldCircle.Center.Y + cameraDelta.Y;
 			}
 		}
 	}
@@ -413,6 +415,14 @@ void Game::Update( float deltaSeconds )
 void Game::Draw( ) const
 {
 	ClearBackground( );
+
+
+	for (size_t i = 0; i < m_SpawnPoints.size(); i++)
+	{
+		m_SpawnPoints.at(i).ScreenRect.Draw(FColor4i{ 0,255,0,255 }, true, false);
+	}
+
+	m_WinBounds.ScreenRect.Draw(FColor4i{ 255,255,0,255 }, true, false);
 
 	m_Player.DrawLife();
 
@@ -443,12 +453,6 @@ void Game::Draw( ) const
 		m_CurrentLevel.at(i).ScreenRect.Draw(FColor4i{ 255,255,255,255 }, true, false);
 	}
 
-	for (size_t i = 0; i < m_SpawnPoints.size(); i++)
-	{
-		m_SpawnPoints.at(i).ScreenRect.Draw(FColor4i{0,255,0,255}, true, false);
-	}
-
-	m_WinBounds.ScreenRect.Draw(FColor4i{ 255,255,0,255 }, true, false);
 
 	m_Player.Draw();
 	
@@ -616,7 +620,7 @@ void Game::LoadLevel(int levelIndex)
 		currentPosition.X = rects.at(i).Left + (rects.at(i).Width/2.f );
 		currentPosition.Y = rects.at(i).Top  - (rects.at(i).Height/2.f);
 
-		CreateFollowingEnemy(3, 3, currentPosition, CreateFollowingBullet(2));
+		CreateFollowingEnemy(3, 0, currentPosition, CreateFollowingBullet(2));
 	}
 	
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_StaticBulletColor, m_LevelScale.X, m_LevelScale.Y);
