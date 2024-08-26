@@ -219,72 +219,68 @@ namespace Pillar {
 	void UPlayer::UpdatePlayerInput(float elapsedSec)
 	{
 		const Uint8* pStates = SDL_GetKeyboardState(nullptr);
-		if (!m_Wounded)
+		if (pStates[SDL_SCANCODE_D])
 		{
-
-			if (pStates[SDL_SCANCODE_D])
-			{
-				m_PressingRight = true;
-				//if (m_Velocity.X < 0)
-				//{
-				//	m_Velocity.X = 0;
-				//}
-				m_Velocity.X += m_MovementSpeed * elapsedSec;
-			}
-			//else if (m_PressingRight)
+			m_PressingRight = true;
+			//if (m_Velocity.X < 0)
 			//{
 			//	m_Velocity.X = 0;
-			//	m_PressingRight = false;
 			//}
-
-			if (pStates[SDL_SCANCODE_A])
-			{
-				m_PressingLeft = true;
-
-				//if (m_Velocity.X > 0)
-				//{
-				//	m_Velocity.X = 0;
-				//}
-				m_Velocity.X += -m_MovementSpeed * elapsedSec;
-			}
-			//else if (m_PressingLeft)
-			//{
-			//	m_Velocity.X = 0;
-			//	m_PressingLeft = false;
-			//}
-
-			if (pStates[SDL_SCANCODE_W])// && !m_PressingUp)
-			{
-				m_PressingUp = true;
-
-				//if (m_Velocity.Y < 0)
-				//{
-				//	m_Velocity.Y = 0;
-				//}
-
-				m_Velocity.Y += m_JumpSpeed * elapsedSec;
-			}
-			//else if (!pStates[SDL_SCANCODE_W] && m_PressingUp)
-			//{
-			//	m_Velocity.Y = 0;
-			//	m_PressingUp = false;
-			//}
-
-			if (pStates[SDL_SCANCODE_S])// && !m_PressingDown)
-			{
-				m_PressingDown = true;
-				//if (m_Velocity.Y > 0)
-				//{
-				//	m_Velocity.Y = 0;
-				//}
-				m_Velocity.Y += -m_JumpSpeed * elapsedSec;
-			}
-			//else if (!pStates[SDL_SCANCODE_S] && m_PressingDown)
-			//{
-			//	m_Velocity.Y = 0;
-			//	m_PressingDown = false;
-			//}
+			m_Velocity.X += m_MovementSpeed * elapsedSec;
 		}
+		//else if (m_PressingRight)
+		//{
+		//	m_Velocity.X = 0;
+		//	m_PressingRight = false;
+		//}
+
+		if (pStates[SDL_SCANCODE_A])
+		{
+			m_PressingLeft = true;
+
+			//if (m_Velocity.X > 0)
+			//{
+			//	m_Velocity.X = 0;
+			//}
+			m_Velocity.X += -m_MovementSpeed * elapsedSec;
+		}
+		//else if (m_PressingLeft)
+		//{
+		//	m_Velocity.X = 0;
+		//	m_PressingLeft = false;
+		//}
+
+		if (pStates[SDL_SCANCODE_W])// && !m_PressingUp)
+		{
+			m_PressingUp = true;
+
+			//if (m_Velocity.Y < 0)
+			//{
+			//	m_Velocity.Y = 0;
+			//}
+
+			m_Velocity.Y += m_JumpSpeed * elapsedSec;
+		}
+		//else if (!pStates[SDL_SCANCODE_W] && m_PressingUp)
+		//{
+		//	m_Velocity.Y = 0;
+		//	m_PressingUp = false;
+		//}
+
+		if (pStates[SDL_SCANCODE_S])// && !m_PressingDown)
+		{
+			m_PressingDown = true;
+			//if (m_Velocity.Y > 0)
+			//{
+			//	m_Velocity.Y = 0;
+			//}
+			m_Velocity.Y += -m_JumpSpeed * elapsedSec;
+		}
+		//else if (!pStates[SDL_SCANCODE_S] && m_PressingDown)
+		//{
+		//	m_Velocity.Y = 0;
+		//	m_PressingDown = false;
+		//}
 	}
 
 	void UPlayer::UpdateGravity(float elapsedSec)

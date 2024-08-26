@@ -15,8 +15,8 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	//LoadLevel(m_CurrentLevelIndex);
-	LoadLevel(3);
+	LoadLevel(m_CurrentLevelIndex);
+	//LoadLevel(3);
 	m_MousePositionScreenIndicator.Radius = 5;
 
 	m_Player.HealthBar().Size = FVector2f{ 200,50 };
@@ -129,8 +129,8 @@ void Game::Update( float deltaSeconds )
 			}
 			else if (m_Bullets.at(i).BulletBehaviour == EBulletBehaviour::MoveStraightInCustomMovement)
 			{
-				m_Bullets.at(i).m_Velocity.X = m_Bullets.at(i).CustomMovementDirection.X * elapsedSec;
-				m_Bullets.at(i).m_Velocity.Y = m_Bullets.at(i).CustomMovementDirection.Y * elapsedSec;
+				m_Bullets.at(i).m_Velocity.X = m_Bullets.at(i).CustomMovementDirection.X * m_Bullets.at(i).FollowingSpeed * elapsedSec;
+				m_Bullets.at(i).m_Velocity.Y = m_Bullets.at(i).CustomMovementDirection.Y * m_Bullets.at(i).FollowingSpeed * elapsedSec;
 			}
 			else if (m_Bullets.at(i).BulletBehaviour == EBulletBehaviour::Patrol)
 			{
@@ -644,7 +644,7 @@ void Game::LoadLevel(int levelIndex)
 		otherPosition.X = rects.at(i).Width < rects.at(i).Height ? rects.at(i).Left : rects.at(i).Left + rects.at(i).Width;
 		otherPosition.Y = rects.at(i).Width < rects.at(i).Height ? rects.at(i).Top - rects.at(i).Height : rects.at(i).Top;;
 
-		CreatePatrolEnemy(3, true, currentPosition, otherPosition, 10, CreatePerishableBullet(3));
+		CreatePatrolEnemy(3, true, currentPosition, otherPosition, 1, CreateFollowingBullet(3));
 	}
 
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_FollowPlayerEnemyColor, m_LevelScale.X, m_LevelScale.Y);
@@ -654,7 +654,7 @@ void Game::LoadLevel(int levelIndex)
 		currentPosition.X = rects.at(i).Left + (rects.at(i).Width/2.f );
 		currentPosition.Y = rects.at(i).Top  - (rects.at(i).Height/2.f);
 
-		CreateFollowingEnemy(3, 3, currentPosition, CreateFollowingBullet(2));
+		CreateFollowingEnemy(3, 1, currentPosition, CreateFollowingBullet(2));
 	}
 	
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_StaticBulletColor, m_LevelScale.X, m_LevelScale.Y);
@@ -783,8 +783,7 @@ void Game::CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2
 	enemy.AlwaysLookTowardsPlayer = alwaysLookTowardsPlayer;
 	enemy.CustomMovementDirection = SVectors::OrthogonalVector(SVectors::Subtract(endPatrol, beginPatrol));
 
-	//enemy.DistanceToKeepFromPlayer;
-	enemy.FollowingSpeed = 200 ;
+	//enemy.FollowingSpeed = 200 ;
 
 	enemy.CollideWithLevel = true ;
 
@@ -850,7 +849,7 @@ void Game::CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patr
 	enemy.BulletBehaviour = EBulletBehaviour::Patrol;
 	enemy.AlwaysLookTowardsPlayer = true;
 
-	enemy.FollowingSpeed = 200;
+	//enemy.FollowingSpeed = 200;
 
 	enemy.CollideWithLevel = true;
 
@@ -911,7 +910,6 @@ void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& 
 	enemy.BulletBehaviour = EBulletBehaviour::FollowPlayer;
 	enemy.AlwaysLookTowardsPlayer = true;
 
-	//enemy.DistanceToKeepFromPlayer;
 	//enemy.FollowingSpeed = 5000;
 
 	enemy.CollideWithLevel = true;
@@ -967,7 +965,7 @@ FBullet Game::CreatePerishableBullet(int maxLife)
 	bullet.BulletBehaviour = EBulletBehaviour::MoveStraightInCustomMovement;
 	bullet.AlwaysLookTowardsPlayer = false;
 
-	bullet.FollowingSpeed = 2000;
+	bullet.FollowingSpeed = 50;
 
 	bullet.CollideWithLevel = true;
 
@@ -1011,7 +1009,7 @@ FBullet Game::CreateUniDirectionalBullet(int maxLife)
 	//bullet.CustomMovementDirection = directionToLookAt;
 
 	//enemy.DistanceToKeepFromPlayer;
-	bullet.FollowingSpeed = 2000;
+	//bullet.FollowingSpeed = 2000;
 
 	bullet.CollideWithLevel = true;
 
@@ -1109,7 +1107,6 @@ FBullet Game::CreateStaticBullet(int maxLife, const FVector2f& position)
 	bullet.BulletRank = EBulletRank::Soldier;
 
 	bullet.AlwaysLookTowardsPlayer = false;
-	bullet.FollowingSpeed = 500;
 
 	bullet.CollideWithLevel = false;
 
@@ -1151,7 +1148,7 @@ FBullet Game::CreateMovableBullet(int maxLife, const FVector2f& position)
 	bullet.BulletRank = EBulletRank::Soldier;
 
 	bullet.AlwaysLookTowardsPlayer = false;
-	bullet.FollowingSpeed = 500;
+	//bullet.FollowingSpeed = 500;
 
 	bullet.CollideWithLevel = true;
 
