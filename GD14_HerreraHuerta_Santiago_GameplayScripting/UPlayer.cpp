@@ -58,17 +58,28 @@ namespace Pillar {
 	{
 		return m_ShieldActivated;
 	}
-	void UPlayer::GetDashDirection(float mousex, float mousey)
+	void UPlayer::GetDashDirection(float mousex, float mousey, bool invertIt)
 	{
 		if (!m_Wounded)
 		{
-			FVector2f normalizedDirectionFromPlayerToMouse{
-				SVectors::NormalizeVector(
-					SVectors::Subtract(FVector2f{ mousex, mousey},m_Body.ScreenCircle.Center)) };
-
-			m_CurrentShotForce =
-				SVectors::Scale(normalizedDirectionFromPlayerToMouse, m_DashForceMagnitude);
+			
 		}
+
+		FVector2f normalizedDirectionFromPlayerToMouse{};
+
+		if (!invertIt)
+		{
+			normalizedDirectionFromPlayerToMouse = SVectors::NormalizeVector(
+				SVectors::Subtract(FVector2f{ mousex, mousey }, m_Body.ScreenCircle.Center));
+		}
+		else
+		{
+			normalizedDirectionFromPlayerToMouse = SVectors::NormalizeVector(
+				SVectors::Subtract(m_Body.ScreenCircle.Center, FVector2f{ mousex, mousey }));
+		}
+
+		m_CurrentShotForce =
+			SVectors::Scale(normalizedDirectionFromPlayerToMouse, m_DashForceMagnitude);
 	}
 	void UPlayer::SetShieldPosition(float mouseScreenPosX, float mouseScreenPosY)
 	{
@@ -119,6 +130,10 @@ namespace Pillar {
 	const FVector2f& UPlayer::GetVelocity() const
 	{
 		return m_Velocity;
+	}
+	void UPlayer::SetVelocity(const FVector2f& velocity)
+	{
+		m_Velocity = velocity;
 	}
 	void UPlayer::SolveCollisionWithBullet(float elapsedSec)
 	{
@@ -172,11 +187,22 @@ namespace Pillar {
 
 			m_Velocity.X += m_BodyOverlapInfo.TranslationVector.X;
 			m_Velocity.Y += m_BodyOverlapInfo.TranslationVector.Y;
+
+			SCollision::SolveRectPhysicsCollision(m_Velocity, m_BodyOverlapInfo);
 		}
 	}
 	FHealthBar& UPlayer::HealthBar()
 	{
 		return m_HealthBar;
+	}
+	void UPlayer::SetSpawnPoint(const FVector2f& position)
+	{
+		m_RespawnPoint = position;
+	}
+	void UPlayer::Respawn()
+	{
+		m_Body.WorldCircle.Center = m_RespawnPoint;
+		m_Body.ScreenCircle.Center = m_RespawnPoint;
 	}
 	void UPlayer::UpdatePlayerInput(float elapsedSec)
 	{
@@ -237,7 +263,8 @@ namespace Pillar {
 
 	void UPlayer::UpdateParryDash(float elapsedSec)
 	{
-		if (m_ShieldActivated && m_ShieldCollided)
+		if ((m_ShieldActivated || (m_ShieldReadyForDeactivation &&
+			m_CurrentShieldActivationTime > 0)) && m_ShieldCollided)
 		{
 			m_Velocity.X += m_CurrentShotForce.X * elapsedSec;
 			m_Velocity.Y += m_CurrentShotForce.Y * elapsedSec;
@@ -320,9 +347,15 @@ namespace Pillar {
 					m_MinShieldRadius,
 					m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
 
+			m_Gravity = STools::CalculateLerpValue(
+				m_MinGravity,
+				m_MaxGravity,
+				m_CurrentShieldActivationTime / m_MaxShieldActivationTime);;
+
 			if (m_CurrentShieldActivationTime >= m_MaxShieldActivationTime)
 			{
 				m_CurrentShieldActivationTime = 0;
+				m_Shield.WorldCircle.Radius = m_MaxShieldRadius;
 			}
 		}
 	}

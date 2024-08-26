@@ -67,24 +67,42 @@ private:
 	FVector2f m_CurrentMouseScreenPosition{};
 
 	UPlayer m_Player{};
-
-	int m_NumOfBullets{0};
-	
 	std::vector<FBullet> m_Bullets;
 
-	//FRectCollider m_RectTest{};
+	const FColor4i m_LevelCollisionColor	{0,		0,     0, 255 };
+	const FColor4i m_StaticShooterColor		{255,	0,     0, 255 };
+	const FColor4i m_PatrolEnemyColor		{255,	142,   0, 255 };
+	const FColor4i m_FollowPlayerEnemyColor	{113,	0,   255, 255 };
+	const FColor4i m_StaticBulletColor		{255,	0,   175, 255 };
+	const FColor4i m_MovableBulletColor		{0,		0,   255, 255 };
+	const FColor4i m_SpawnPointColor		{125,  255,    0, 255 };
+	const FColor4i m_WinPointColor			{ 251, 242,   54, 255 };
+
+	const FVector2f m_LevelScale{ 70,70 };
+	const std::string m_GeneralLevelString{ "Level_" };
+	const int m_MaxLevelNum{2};
+	int m_CurrentLevelIndex{0};
 	std::vector<FRectCollider> m_CurrentLevel;
 
-	FCircleCollider m_Bounds;
+	std::vector<FRectCollider> m_SpawnPoints;
+	FRectCollider m_WinBounds{};
 
+	void ResetLevel();
+	void NextLevel();
+	void LoadLevel(int levelIndex);
+
+	void CreateSpawnPoint(const FRectf& rect);
+
+	void CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const FVector2f& position, int bulletNumber, const FBullet& bulletType);
 	void CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol, int bulletNumber, const FBullet& bulletType);
 	void CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints, int bulletNumber, const FBullet& bulletType);
-	void CreateFollowingEnemy(int maxLife, int bulletNumber, const FBullet& bulletType);
+	void CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& position, const FBullet& bulletType);
 
+	FBullet CreatePerishableBullet(int maxLife);
 	FBullet CreateUniDirectionalBullet(int MaxLife);
 	FBullet CreateFollowingBullet(int maxLife);
-	FBullet CreateStaticBullet(int maxLife, const FVector2f& position, bool alwaysWounded );
-	FBullet CreateMovableBullet(int maxLife, const FVector2f& position);
+	FBullet CreateStaticBullet(int maxLife, const FVector2f& position);//if this is bond by life, it will spawn in index num 0
+	FBullet CreateMovableBullet(int maxLife, const FVector2f& position);//if this is bond by life, it will spawn in index num 0
 
 
 	// FUNCTIONS

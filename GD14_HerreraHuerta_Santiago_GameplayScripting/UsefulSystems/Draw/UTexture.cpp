@@ -220,7 +220,8 @@ namespace Pillar {
 		m_IsValid = true;
 
 		// Load image at specified path
-		SDL_Surface* pLoadedSurface = IMG_Load(("../Resources/" + path).c_str());
+		//SDL_Surface* pLoadedSurface = IMG_Load(("../Resources/" + path).c_str());
+		SDL_Surface* pLoadedSurface = IMG_Load((path.c_str()));
 		if (pLoadedSurface == nullptr)
 		{
 			std::cerr << "Texture::CreateFromImage, error when calling IMG_Load: " << SDL_GetError() << std::endl;
@@ -593,13 +594,13 @@ namespace Pillar {
 		rect.Height = ySize;
 		rect.Width = xSize;
 
-		for (size_t rowIdx = 0; rowIdx < NumberOfRows(); rowIdx++)
+		for (int rowIdx = NumberOfRows() - 1; rowIdx >= 0; --rowIdx)
 		{
-			for (size_t colIdx = 0; colIdx < NumberOfColumns(); colIdx++)
+			for (size_t colIdx = 0; colIdx < NumberOfColumns(); ++colIdx)
 			{
 				if (PixelAt(colIdx, rowIdx) == color)
 				{
-					rect.Top = rowIdx * ySize;
+					rect.Top = -rowIdx * ySize;
 					rect.Left = colIdx * xSize;
 					
 					rects.push_back(rect);

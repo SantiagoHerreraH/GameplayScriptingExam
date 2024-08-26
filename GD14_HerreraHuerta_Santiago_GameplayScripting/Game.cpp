@@ -15,40 +15,17 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	//m_RectTest.WorldRect.Height = 100;
-	//m_RectTest.WorldRect.Width = 1000;
-	//m_RectTest.WorldRect.Left = -100;
-	//m_RectTest.WorldRect.Top = -100;
-	//m_RectTest.ScreenRect = m_RectTest.WorldRect;
-
-	//m_Bullets.resize(m_NumOfBullets);
-	//
-	//
-	//
-	//for (size_t i = 0; i < m_Bullets.size(); i++)
-	//{
-	//	m_Bullets.at(i).m_Body.WorldCircle.Radius = m_Bullets.at(i).MaxHealthBodyRadius;
-	//	m_Bullets.at(i).m_Body.WorldCircle.Center = 
-	//		FVector2f{ 
-	//		(float)STools::GetRandomBetweenRange(0,GetViewPort().width),
-	//		(float)STools::GetRandomBetweenRange(0,GetViewPort().height) };
-	//	m_Bullets.at(i).m_Body.ScreenCircle = m_Bullets.at(i).m_Body.WorldCircle;
-	//}
-	
-	m_Bounds.WorldCircle.Radius = 1000;
-	m_Bounds.ScreenCircle.Radius = m_Bounds.WorldCircle.Radius;
-
-	CreatePatrolEnemy(3, true, FVector2f{0,0}, FVector2f{100,0 }, 1, CreateFollowingBullet(3));
+	LoadLevel(m_CurrentLevelIndex);
 
 	m_Player.HealthBar().Size = FVector2f{ 200,50 };
 	m_Player.HealthBar().Position = FVector2f{ 30, GetViewPort().height - m_Player.HealthBar().Size.Y - 10};
 	
-
 	m_Camera.Position = m_Player.Body().WorldCircle.Center;
 }
 
 void Game::Cleanup( )
 {
+	UTexture::DeleteAll();
 }
 
 void Game::Update( float elapsedSec )
@@ -163,9 +140,6 @@ void Game::Update( float elapsedSec )
 						SVectors::Subtract(currentPatrolPoint, m_Bullets.at(i).m_Body.WorldCircle.Center)),
 						m_Bullets.at(i).FollowingSpeed);
 
-				m_Bullets.at(i).m_Velocity.X = followingOffset.X * elapsedSec;
-				m_Bullets.at(i).m_Velocity.Y = followingOffset.Y * elapsedSec;
-
 				if (SCollision::IsPointInCircle(currentPatrolPoint, m_Bullets.at(i).m_Body.WorldCircle))
 				{
 					m_Bullets.at(i).CurrentTimeWaited += elapsedSec;
@@ -178,6 +152,11 @@ void Game::Update( float elapsedSec )
 							m_Bullets.at(i).CurrentIndexToPatrol < (m_Bullets.at(i).PatrolPositions.size() - 1) ?
 							m_Bullets.at(i).CurrentIndexToPatrol + 1 : 0;
 					}
+				}
+				else
+				{
+					m_Bullets.at(i).m_Velocity.X = followingOffset.X * elapsedSec;
+					m_Bullets.at(i).m_Velocity.Y = followingOffset.Y * elapsedSec;
 				}
 			}
 			
@@ -349,13 +328,29 @@ void Game::Update( float elapsedSec )
 		
 	}
 	
-	m_Player.SolveCollisionWithBounds(m_Bounds.WorldCircle, elapsedSec);
 
 	for (size_t i = 0; i < m_CurrentLevel.size(); i++)
 	{
 		m_Player.SolveCollisionWithRect(m_CurrentLevel.at(i).WorldRect);
 	}
 	
+	for (size_t i = 0; i < m_SpawnPoints.size(); i++)
+	{
+		if (SCollision::IsOverlapping(m_Player.Body().WorldCircle, m_SpawnPoints.at(i).WorldRect, false))
+		{
+			FVector2f middlePos{
+				m_SpawnPoints.at(i).WorldRect.Left + m_SpawnPoints.at(i).WorldRect.Width  / 2.f,
+				m_SpawnPoints.at(i).WorldRect.Top  - m_SpawnPoints.at(i).WorldRect.Height / 2.f,
+			};
+
+			m_Player.SetSpawnPoint(middlePos);
+		}
+	}
+
+	if (SCollision::IsOverlapping(m_Player.Body().WorldCircle, m_WinBounds.WorldRect, false))
+	{
+		NextLevel();
+	}
 
 	// --- CAMERA LOGIC --- 
 	
@@ -377,13 +372,20 @@ void Game::Update( float elapsedSec )
 	m_Player.SetShieldPosition(m_CurrentMouseScreenPosition.X, m_CurrentMouseScreenPosition.Y);
 	m_Player.SetCameraDelta(cameraDelta);
 
-	m_Bounds.ScreenCircle.Center.X = m_Bounds.WorldCircle.Center.X + cameraDelta.X;
-	m_Bounds.ScreenCircle.Center.Y = m_Bounds.WorldCircle.Center.Y + cameraDelta.Y;
+
+	m_WinBounds.ScreenRect.Left = m_WinBounds.WorldRect.Left + cameraDelta.X;
+	m_WinBounds.ScreenRect.Top  = m_WinBounds.WorldRect.Top + cameraDelta.Y;
 
 	for (size_t i = 0; i < m_CurrentLevel.size(); i++)
 	{
 		m_CurrentLevel.at(i).ScreenRect.Left = m_CurrentLevel.at(i).WorldRect.Left + cameraDelta.X;
 		m_CurrentLevel.at(i).ScreenRect.Top =  m_CurrentLevel.at(i).WorldRect.Top + cameraDelta.Y;
+	}
+
+	for (size_t i = 0; i < m_SpawnPoints.size(); i++)
+	{
+		m_SpawnPoints.at(i).ScreenRect.Left = m_SpawnPoints.at(i).WorldRect.Left + cameraDelta.X;
+		m_SpawnPoints.at(i).ScreenRect.Top = m_SpawnPoints.at(i).WorldRect.Top + cameraDelta.Y;
 	}
 
 	for (size_t i = 0; i < m_Bullets.size(); i++)
@@ -393,6 +395,14 @@ void Game::Update( float elapsedSec )
 			m_Bullets.at(i).m_Body.ScreenCircle.Center.X = m_Bullets.at(i).m_Body.WorldCircle.Center.X + cameraDelta.X;
 			m_Bullets.at(i).m_Body.ScreenCircle.Center.Y = m_Bullets.at(i).m_Body.WorldCircle.Center.Y + cameraDelta.Y;
 
+			if (m_Bullets.at(i).SenseBound)
+			{
+				m_Bullets.at(i).m_Body.WorldCircle.Center.X	= m_Bullets.at(i).m_Body.WorldCircle.Center.X;
+				m_Bullets.at(i).m_Body.WorldCircle.Center.Y	= m_Bullets.at(i).m_Body.WorldCircle.Center.Y;
+
+				m_Bullets.at(i).Sense.ScreenCircle.Center.X = m_Bullets.at(i).m_Body.WorldCircle.Center.X + cameraDelta.X;
+				m_Bullets.at(i).Sense.ScreenCircle.Center.Y = m_Bullets.at(i).m_Body.WorldCircle.Center.Y + cameraDelta.Y;
+			}
 		}
 	}
 
@@ -402,7 +412,6 @@ void Game::Draw( ) const
 {
 	ClearBackground( );
 
-	m_Bounds.ScreenCircle.Draw(FColor4i{0,0,255,255}, false, 10.f);
 	m_Player.DrawLife();
 
 	for (size_t i = 0; i < m_Bullets.size(); i++)
@@ -417,6 +426,11 @@ void Game::Draw( ) const
 			{
 				m_Bullets.at(i).m_Body.ScreenCircle.Draw(m_Bullets.at(i).BulletNormalColor, true);
 			}
+
+			if (m_Bullets.at(i).SenseBound)
+			{
+				m_Bullets.at(i).Sense.ScreenCircle.Draw(FColor4i{255, 255, 255, 255 }, false, 5.f);
+			}
 		}
 		
 	}
@@ -426,6 +440,13 @@ void Game::Draw( ) const
 	{
 		m_CurrentLevel.at(i).ScreenRect.Draw(FColor4i{ 255,255,255,255 }, true, false);
 	}
+
+	for (size_t i = 0; i < m_SpawnPoints.size(); i++)
+	{
+		m_SpawnPoints.at(i).ScreenRect.Draw(FColor4i{0,255,0,255}, true, false);
+	}
+
+	m_WinBounds.ScreenRect.Draw(FColor4i{ 255,255,0,255 }, true, false);
 
 	m_Player.Draw();
 	
@@ -488,7 +509,12 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 	if (e.button == SDL_BUTTON_LEFT)
 	{
 		m_Player.ActivateShield();
-		//m_Player.GetDashDirection(e.x, e.y);
+		m_Player.GetDashDirection(e.x, e.y, false);
+	}
+	if (e.button == SDL_BUTTON_RIGHT)
+	{
+		m_Player.ActivateShield();
+		m_Player.GetDashDirection(e.x, e.y, true);
 	}
 }
 
@@ -508,7 +534,7 @@ void Game::ProcessMouseUpEvent( const SDL_MouseButtonEvent& e )
 	//	break;
 	//}
 
-	if (e.button == SDL_BUTTON_LEFT)
+	if (e.button != SDL_BUTTON_MIDDLE)
 	{
 		m_Player.DeactivateShield();
 	}
@@ -518,6 +544,180 @@ void Game::ClearBackground( ) const
 {
 	glClearColor( 0.0f, 0.0f, 0.3f, 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT );
+}
+
+void Game::ResetLevel()
+{
+	LoadLevel(m_CurrentLevelIndex);
+}
+
+void Game::NextLevel()
+{
+	m_CurrentLevelIndex = m_CurrentLevelIndex < (m_MaxLevelNum - 1) ? m_CurrentLevelIndex + 1 : 0;
+	LoadLevel(m_CurrentLevelIndex);
+}
+
+void Game::LoadLevel(int levelIndex)
+{
+	UTextureData currentLevel{UTexture(m_GeneralLevelString + std::to_string(levelIndex) + ".png")};
+
+	std::vector<FRectf> rects{ SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_LevelCollisionColor, m_LevelScale.X,m_LevelScale.Y) )};
+	m_CurrentLevel.clear();
+	m_CurrentLevel.reserve(rects.size());
+
+	FRectCollider currentRect{};
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentRect.ScreenRect = rects.at(i);
+		currentRect.WorldRect  = rects.at(i);
+
+		m_CurrentLevel.push_back(currentRect);
+	}
+
+	//rects = currentLevel.MakeRectsFromPixelsOfColor(m_StaticShooterColor, m_LevelScale.X,m_LevelScale.Y);
+	//m_Bullets.clear();
+	//m_CurrentLevel.reserve(rects.size());
+	//
+	//for (size_t i = 0; i < rects.size(); i++)
+	//{
+	//	CreateStaticShooterEnemy();
+	//}
+
+	rects = SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_PatrolEnemyColor, m_LevelScale.X,m_LevelScale.Y));
+	m_Bullets.clear();
+	
+	FVector2f currentPosition{};
+	FVector2f otherPosition{};
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentPosition.X = rects.at(i).Left;
+		currentPosition.Y = rects.at(i).Top;
+
+		otherPosition.X = rects.at(i).Width < rects.at(i).Height ? rects.at(i).Left : rects.at(i).Left + rects.at(i).Width;
+		otherPosition.Y = rects.at(i).Width < rects.at(i).Height ? rects.at(i).Top - rects.at(i).Height : rects.at(i).Top;;
+
+		CreatePatrolEnemy(3, true, currentPosition, otherPosition, 10, CreatePerishableBullet(3));
+	}
+
+	rects = currentLevel.MakeRectsFromPixelsOfColor(m_FollowPlayerEnemyColor, m_LevelScale.X, m_LevelScale.Y);
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentPosition.X = rects.at(i).Left + (rects.at(i).Width/2.f );
+		currentPosition.Y = rects.at(i).Top  - (rects.at(i).Height/2.f);
+
+		CreateFollowingEnemy(3, 3, currentPosition, CreateFollowingBullet(2));
+	}
+	
+	rects = currentLevel.MakeRectsFromPixelsOfColor(m_StaticBulletColor, m_LevelScale.X, m_LevelScale.Y);
+	m_Bullets.reserve(m_Bullets.size() + rects.size());
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentPosition.X = rects.at(i).Left + (rects.at(i).Width / 2.f);
+		currentPosition.Y = rects.at(i).Top - (rects.at(i).Height / 2.f);
+
+		m_Bullets.push_back(CreateStaticBullet(3, currentPosition));
+	}
+
+	rects = currentLevel.MakeRectsFromPixelsOfColor(m_MovableBulletColor, m_LevelScale.X, m_LevelScale.Y);
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentPosition.X = rects.at(i).Left + (rects.at(i).Width / 2.f);
+		currentPosition.Y = rects.at(i).Top - (rects.at(i).Height / 2.f);
+
+		CreateMovableBullet(3, currentPosition);
+	}
+	
+	rects = SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_SpawnPointColor, m_LevelScale.X, m_LevelScale.Y));
+
+	FVector2f leftestSpawnPoint{INFINITY, INFINITY};
+	float currentCenter{};
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentCenter = (rects.at(i).Left + rects.at(i).Width / 2.f);
+		if (currentCenter < leftestSpawnPoint.X )
+		{
+			leftestSpawnPoint.X = currentCenter;
+			leftestSpawnPoint.Y = rects.at(i).Top + (rects.at(i).Height / 2.f);
+		}
+		CreateSpawnPoint(rects.at(i));
+	}
+
+	m_Player.SetSpawnPoint(leftestSpawnPoint);
+	m_Player.Respawn();
+	m_Player.SetVelocity(FVector2f{ 0,0 });
+
+	rects = SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_WinPointColor, m_LevelScale.X, m_LevelScale.Y));
+	m_WinBounds.ScreenRect = rects.at(0);
+	m_WinBounds.WorldRect = rects.at(0);
+}
+
+void Game::CreateSpawnPoint(const FRectf& rect)
+{
+	FRectCollider rectColl{};
+	rectColl.ScreenRect = rect;
+	rectColl.WorldRect = rect;
+	m_SpawnPoints.push_back(rectColl);
+}
+
+
+
+void Game::CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const FVector2f& position, int bulletNumber, const FBullet& bulletType)
+{
+	FBullet enemy{};
+
+	enemy.BulletNormalColor = FColor4i{ 50,50,10, 255 };
+
+	enemy.IsSpawned = true;
+	enemy.IsStatic = true;
+
+	enemy.BulletRank = EBulletRank::Commander;
+	enemy.IndexOfCommander = m_Bullets.size(); // own commander
+
+	enemy.AlwaysLookTowardsPlayer = false;
+	enemy.CustomMovementDirection = shootDirection;
+
+	enemy.CollideWithLevel = true;
+
+	enemy.CurrentLife = maxLife;
+	enemy.MaxLife = maxLife;
+	enemy.CurrentDeathTime = 0.f;
+	enemy.MaxDeathTime = 1.f;
+
+	enemy.HaveTimedLife = false;
+
+	enemy.MaxHealthBodyRadius = 35;
+	enemy.MinHealthBodyRadius = 10;
+	enemy.MinBodyRadius = 0;
+
+	enemy.m_Body.WorldCircle.Center = position;
+	enemy.m_Body.WorldCircle.Radius = enemy.MaxHealthBodyRadius;
+	enemy.m_Body.ScreenCircle = enemy.m_Body.WorldCircle;
+
+	enemy.SenseBound = false;
+
+	enemy.Wounded = false;
+	enemy.MaxWoundedTime = 1.f;
+	enemy.CurrentWoundedTime = 0.f;
+
+	m_Bullets.push_back(enemy);
+	FBullet currentBullet{ bulletType };
+	m_Bullets.reserve(m_Bullets.size() + bulletNumber);
+
+	for (int i = 0; i < bulletNumber; i++)
+	{
+		currentBullet.BulletRank;
+		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
+		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
+		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
+		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
+		m_Bullets.push_back(currentBullet);
+	}
 }
 
 void Game::CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol, int bulletNumber, const FBullet& bulletType)
@@ -589,6 +789,166 @@ void Game::CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2
 	}
 }
 
+void Game::CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints, int bulletNumber, const FBullet& bulletType)
+{
+	FBullet enemy{};
+
+	enemy.BulletNormalColor = FColor4i{ 255,255,10, 255 };
+
+	enemy.IsSpawned = true;
+
+	enemy.BulletRank = EBulletRank::Commander;
+	enemy.IndexOfCommander = m_Bullets.size(); // own commander
+
+	enemy.BulletBehaviour = EBulletBehaviour::Patrol;
+	enemy.AlwaysLookTowardsPlayer = true;
+
+	enemy.FollowingSpeed = 200;
+
+	enemy.CollideWithLevel = true;
+
+	enemy.CurrentLife = maxLife;
+	enemy.MaxLife = maxLife;
+	enemy.CurrentDeathTime = 0.f;
+	enemy.MaxDeathTime = 1.f;
+
+	enemy.HaveTimedLife = false;
+
+	enemy.MaxHealthBodyRadius = 40;
+	enemy.MinHealthBodyRadius = 10;
+	enemy.MinBodyRadius = 0;
+
+	enemy.m_Body.WorldCircle.Center = patrolPoints.at(0);
+	enemy.m_Body.WorldCircle.Radius = enemy.MaxHealthBodyRadius;
+	enemy.m_Body.ScreenCircle = enemy.m_Body.WorldCircle;
+
+	enemy.SenseBound = false;
+	//enemy.Sense;
+
+	enemy.Wounded = false;
+	enemy.MaxWoundedTime = 1.f;
+	enemy.CurrentWoundedTime = 0.f;
+
+	enemy.PatrolPositions = patrolPoints;
+	enemy.CurrentIndexToPatrol = 0;
+	enemy.MaxTimeToWaitAtEachPosition = 1.f;
+	enemy.CurrentTimeWaited = 0;
+
+	m_Bullets.reserve(m_Bullets.size() + bulletNumber + 1);
+	m_Bullets.push_back(enemy);
+	FBullet currentBullet{ bulletType };
+
+	for (int i = 0; i < bulletNumber; i++)
+	{
+		currentBullet.BulletRank;
+		currentBullet.BulletRank = EBulletRank::Soldier;
+		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
+		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
+		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
+		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
+		m_Bullets.push_back(currentBullet);
+	}
+}
+
+void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& position, const FBullet& bulletType)
+{
+	FBullet enemy{};
+
+	enemy.BulletNormalColor = FColor4i{ 255,10,10, 255 };
+
+	enemy.IsSpawned = true;
+
+	enemy.BulletRank = EBulletRank::Commander;
+	enemy.IndexOfCommander = m_Bullets.size(); // own commander
+
+	enemy.BulletBehaviour = EBulletBehaviour::FollowPlayer;
+	enemy.AlwaysLookTowardsPlayer = true;
+
+	//enemy.DistanceToKeepFromPlayer;
+	enemy.FollowingSpeed = 200;
+
+	enemy.CollideWithLevel = true;
+
+	enemy.CurrentLife = maxLife;
+	enemy.MaxLife = maxLife;
+	enemy.CurrentDeathTime = 0.f;
+	enemy.MaxDeathTime = 1.f;
+
+	enemy.HaveTimedLife = false;
+
+	enemy.MaxHealthBodyRadius = 40;
+	enemy.MinHealthBodyRadius = 10;
+	enemy.MinBodyRadius = 0;
+
+	enemy.m_Body.WorldCircle.Center = position;
+	enemy.m_Body.WorldCircle.Radius = enemy.MaxHealthBodyRadius;
+	enemy.m_Body.ScreenCircle = enemy.m_Body.WorldCircle;
+
+	enemy.SenseBound = true;//set sense into the center of the body
+	enemy.Sense.WorldCircle.Center = position;
+	enemy.Sense.WorldCircle.Radius = 120;
+	enemy.Sense.ScreenCircle = enemy.Sense.WorldCircle;
+
+	enemy.Wounded = false;
+	enemy.MaxWoundedTime = 1.f;
+	enemy.CurrentWoundedTime = 0.f;
+
+	m_Bullets.reserve(m_Bullets.size() + bulletNumber + 1);
+	m_Bullets.push_back(enemy);
+	FBullet currentBullet{ bulletType };
+
+	for (int i = 0; i < bulletNumber; i++)
+	{
+		currentBullet.BulletRank;
+		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
+		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
+		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
+		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
+		m_Bullets.push_back(currentBullet);
+	}
+}
+
+FBullet Game::CreatePerishableBullet(int maxLife)
+{
+	FBullet bullet{};
+
+	bullet.BulletNormalColor = FColor4i{ 30,70,255, 255 };
+	bullet.IsSpawned = true;
+
+	bullet.BulletRank = EBulletRank::Soldier;
+
+	bullet.BulletBehaviour = EBulletBehaviour::MoveStraightInCustomMovement;
+	bullet.AlwaysLookTowardsPlayer = false;
+
+	bullet.FollowingSpeed = 2000;
+
+	bullet.CollideWithLevel = true;
+
+	bullet.CurrentLife = 1;
+	bullet.MaxLife = maxLife;
+	bullet.CurrentDeathTime = 0.f;
+	bullet.MaxDeathTime = 1.f;
+
+	bullet.HaveTimedLife = true;
+	bullet.MaxLifeTime = 5.f;
+	bullet.CurrentLifeTime = 0.f;
+
+	bullet.MaxHealthBodyRadius = 30;
+	bullet.MinHealthBodyRadius = 10;
+	bullet.MinBodyRadius = 0;
+
+	bullet.m_Body.WorldCircle.Radius = bullet.MaxHealthBodyRadius;
+	bullet.m_Body.ScreenCircle = bullet.m_Body.WorldCircle;
+
+	bullet.SenseBound = false;
+
+	bullet.Wounded = false;
+	bullet.MaxWoundedTime = 1.f;
+	bullet.CurrentWoundedTime = 0.f;
+
+	return bullet;
+}
+
 FBullet Game::CreateUniDirectionalBullet(int maxLife)
 {
 	FBullet bullet{};
@@ -604,7 +964,7 @@ FBullet Game::CreateUniDirectionalBullet(int maxLife)
 	//bullet.CustomMovementDirection = directionToLookAt;
 
 	//enemy.DistanceToKeepFromPlayer;
-	bullet.FollowingSpeed = 500;
+	bullet.FollowingSpeed = 2000;
 
 	bullet.CollideWithLevel = true;
 
@@ -686,7 +1046,7 @@ FBullet Game::CreateFollowingBullet(int maxLife)
 	return bullet;
 }
 
-FBullet Game::CreateStaticBullet(int maxLife, const FVector2f& position, bool alwaysWounded)
+FBullet Game::CreateStaticBullet(int maxLife, const FVector2f& position)
 {
 	FBullet bullet{};
 
@@ -695,7 +1055,7 @@ FBullet Game::CreateStaticBullet(int maxLife, const FVector2f& position, bool al
 
 	bullet.IsSpawned = true;
 	bullet.IsStatic = true;
-	bullet.AlwaysWounded = alwaysWounded;
+	bullet.AlwaysWounded = true;
 
 	bullet.BulletRank = EBulletRank::Soldier;
 

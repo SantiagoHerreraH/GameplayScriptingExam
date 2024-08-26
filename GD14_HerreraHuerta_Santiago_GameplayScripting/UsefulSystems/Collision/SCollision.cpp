@@ -314,7 +314,6 @@ namespace Pillar {
 		//outOverlapInfo1.isOverlapping = true;
 		//outOverlapInfo1.IntersectionPoint;
 		//outOverlapInfo1.OtherIsOptimized;
-		//outOverlapInfo1.DirectionOfCollided;
 		 
 		
 		// if the distance is less than the radius, collision!
@@ -330,12 +329,31 @@ namespace Pillar {
 			{
 				outOverlapInfo1.TranslationVector.X = deltaX;
 				outOverlapInfo1.TranslationVector.Y = 0;
+
+
+				outOverlapInfo1.DirectionOfCollided.X = deltaX > 0 ? -1 : 1;
+				outOverlapInfo1.DirectionOfCollided.Y = 0;
 			}
 			else
 			{
 				outOverlapInfo1.TranslationVector.Y = deltaY;
 				outOverlapInfo1.TranslationVector.X = 0;
+
+
+				if (isYInverted)
+				{
+					outOverlapInfo1.DirectionOfCollided.Y = deltaY > 0 ? 1 : -1;
+					outOverlapInfo1.DirectionOfCollided.X = 0;
+				}
+				else
+				{
+
+					outOverlapInfo1.DirectionOfCollided.Y = deltaY > 0 ? -1 : 1;
+					outOverlapInfo1.DirectionOfCollided.X = 0;
+				}
 			}
+
+			
 			
 
 			return true;

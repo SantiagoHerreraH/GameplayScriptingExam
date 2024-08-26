@@ -51,7 +51,7 @@ namespace Pillar {
 		void ActivateShield();
 		bool IsShieldActivated()const;
 
-		void GetDashDirection(float mousex, float mousey);
+		void GetDashDirection(float mousex, float mousey, bool invertIt);
 
 		void ActivateShieldCollision();
 		void DeactivateShieldCollision();
@@ -62,12 +62,16 @@ namespace Pillar {
 		FOverlapInfo& BodyOverlapInfo();
 
 		const FVector2f& GetVelocity()const;
+		void SetVelocity(const FVector2f& velocity);
 
 		void SolveCollisionWithBullet(float elapsedSec);
 		void SolveCollisionWithBounds(const FCirclef& bounds, float elapsedSec);
 		void SolveCollisionWithRect(const FRectf& rect);
 
 		FHealthBar& HealthBar();
+
+		void SetSpawnPoint(const FVector2f& position);
+		void Respawn();
 
 	private:
 		void UpdatePlayerInput(float elapsedSec);
@@ -98,7 +102,7 @@ namespace Pillar {
 		bool  m_ShieldCollided{ false };
 		bool  m_ShieldActivated{ false };
 		bool  m_ShieldReadyForDeactivation{ true };
-		float m_MaxShieldActivationTime{ 0.5f };
+		float m_MaxShieldActivationTime{ 1.5f };
 		float m_CurrentShieldActivationTime{ 0.f };
 
 		FCircleCollider m_Body;
@@ -106,12 +110,14 @@ namespace Pillar {
 		FVector2f m_Velocity;
 		FVector2f m_CurrentShotForce;
 
-		float m_Gravity{};//{1000};
+		float m_MaxGravity{ 1000 };
+		float m_MinGravity{0};
+		float m_Gravity{ m_MaxGravity };
 		float m_MovementSpeed{ 40000 };
 		float m_JumpSpeed{ 70000 };
 
 		float m_MaxPlayerVelocityPerSecond{ 1000 };
-		float m_DashForceMagnitude{ 60000 };
+		float m_DashForceMagnitude{ 100000 };
 		float m_CollisionImpactForceMagnitude{ 500 };
 
 		bool  m_Wounded{ false };
