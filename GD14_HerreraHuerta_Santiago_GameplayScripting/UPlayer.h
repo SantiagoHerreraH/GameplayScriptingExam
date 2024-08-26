@@ -47,6 +47,8 @@ namespace Pillar {
 		FCircleCollider& Shield();
 		FOverlapInfo& ShieldOverlapInfo();
 
+		std::vector<int>& BulletsToControl();
+
 		void DeactivateShield();
 		void ActivateShield();
 		bool IsShieldActivated()const;
@@ -59,6 +61,8 @@ namespace Pillar {
 
 		float GetTimeMultiplier()const;
 
+
+		const FCircleCollider& ConstBody()const;
 		FCircleCollider& Body();
 		FOverlapInfo& BodyOverlapInfo();
 
@@ -85,7 +89,7 @@ namespace Pillar {
 		float ConvertSlowModeTimeToNormalTime(float currentDeltaSeconds);
 		void SetNormalTime();
 
-
+		bool TimeIsSlowed{ false };
 		float m_TimeMultiplier{ 1.f };
 		FHealthBar m_HealthBar;
 
@@ -94,12 +98,14 @@ namespace Pillar {
 
 		FVector2f m_RespawnPoint{ 0,0 };
 
+		std::vector<int> m_BulletIndexesToControl;
+
 		bool m_PressingUp{ false };
 		bool m_PressingDown{ false };
 		bool m_PressingLeft{ false };
 		bool m_PressingRight{ false };
 
-		float m_MaxShieldRadius{ 40.f };
+		float m_MaxShieldRadius{ 70.f };
 		float m_MinShieldRadius{ 0.f };
 		FCircleCollider m_Shield;
 		FOverlapInfo m_ShieldOverlapInfo;
@@ -114,15 +120,14 @@ namespace Pillar {
 		FOverlapInfo m_BodyOverlapInfo;
 		FVector2f m_Velocity;
 		FVector2f m_CurrentShotForce; 
-		FCircleCollider m_CurrentShotForceCircle;
 
-		float m_MaxGravity{ 1000 };
+		float m_MaxGravity{ 0 };// { 1000 };
 		float m_MinGravity{0};
 		float m_Gravity{ m_MaxGravity };
-		float m_MovementSpeed{ 40000 };
-		float m_JumpSpeed{ 70000 };
+		float m_MovementSpeed{4000};//{ 40000 };
+		float m_JumpSpeed{ 4000 };// { 70000 };
 
-		float m_MaxPlayerVelocityPerSecond{ 1000 };
+		float m_MaxPlayerVelocityPerSecond{ 600 };
 		float m_DashForceMagnitude{ 100000 };
 		float m_CollisionImpactForceMagnitude{ 500 };
 

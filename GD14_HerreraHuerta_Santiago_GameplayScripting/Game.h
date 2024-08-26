@@ -64,6 +64,9 @@ public:
 private:
 
 	FCamera m_Camera{};
+
+	bool m_Aiming{ false };
+	FCirclef m_MousePositionScreenIndicator{};
 	FVector2f m_CurrentMouseScreenPosition{};
 
 	UPlayer m_Player{};

@@ -17,6 +17,7 @@ void Game::Initialize( )
 {
 	//LoadLevel(m_CurrentLevelIndex);
 	LoadLevel(3);
+	m_MousePositionScreenIndicator.Radius = 5;
 
 	m_Player.HealthBar().Size = FVector2f{ 200,50 };
 	m_Player.HealthBar().Position = FVector2f{ 30, GetViewPort().height - m_Player.HealthBar().Size.Y - 10};
@@ -98,8 +99,6 @@ void Game::Update( float deltaSeconds )
 
 		if (!m_Bullets.at(i).Wounded && !m_Bullets.at(i).AlwaysWounded && !m_Bullets.at(i).IsStatic)
 		{
-			
-
 			if (m_Bullets.at(i).BulletBehaviour == EBulletBehaviour::FollowPlayer)
 			{
 				if (!m_Bullets.at(i).SenseBound ||
@@ -176,8 +175,8 @@ void Game::Update( float deltaSeconds )
 		}
 		
 
-		m_Bullets.at(i).m_Body.WorldCircle.Center.X += m_Bullets.at(i).m_Velocity.X;
-		m_Bullets.at(i).m_Body.WorldCircle.Center.Y += m_Bullets.at(i).m_Velocity.Y;
+		m_Bullets.at(i).m_Body.WorldCircle.Center.X += m_Bullets.at(i).m_Velocity.X * elapsedSec;
+		m_Bullets.at(i).m_Body.WorldCircle.Center.Y += m_Bullets.at(i).m_Velocity.Y * elapsedSec;
 	}
 
 	m_Player.Update(elapsedSec);
@@ -200,15 +199,17 @@ void Game::Update( float deltaSeconds )
 
 				if (!m_Bullets.at(i).IsStatic)
 				{
-					m_Bullets.at(i).m_Body.WorldCircle.Center.X += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.X;
-					m_Bullets.at(i).m_Body.WorldCircle.Center.Y += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.Y;
+					//m_Bullets.at(i).m_Body.WorldCircle.Center.X += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.X;
+					//m_Bullets.at(i).m_Body.WorldCircle.Center.Y += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.Y;
+					//
+					//hitForce = SVectors::Scale(
+					//	SVectors::NormalizeVector(SVectors::Subtract(m_CurrentMouseScreenPosition, m_Player.Body().ScreenCircle.Center)),
+					//	m_Player.GetShieldForce());
+					//
+					//m_Bullets.at(i).m_Velocity.X = hitForce.X;// * elapsedSec;
+					//m_Bullets.at(i).m_Velocity.Y = hitForce.Y;// * elapsedSec;
 
-					hitForce = SVectors::Scale(
-						SVectors::NormalizeVector(SVectors::Subtract(m_CurrentMouseScreenPosition, m_Player.Body().ScreenCircle.Center)),
-						m_Player.GetShieldForce() * elapsedSec);
-
-					m_Bullets.at(i).m_Velocity.X = hitForce.X;
-					m_Bullets.at(i).m_Velocity.Y = hitForce.Y;
+					m_Player.BulletsToControl().push_back(i);
 
 					m_Bullets.at(i).Wounded = true;
 					m_Bullets.at(i).CurrentWoundedTime = 0;
@@ -231,10 +232,13 @@ void Game::Update( float deltaSeconds )
 
 				hitForce = SVectors::Scale(
 					SVectors::NormalizeVector(m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector),
-					m_Player.GetShieldForce() * elapsedSec);
+					m_Player.GetShieldForce());
 
-				m_Bullets.at(i).m_Velocity.X += hitForce.X;
-				m_Bullets.at(i).m_Velocity.Y += hitForce.Y;
+				//m_Bullets.at(i).m_Velocity.X += hitForce.X * elapsedSec;
+				//m_Bullets.at(i).m_Velocity.Y += hitForce.Y * elapsedSec;
+
+				m_Bullets.at(i).m_Velocity.X = hitForce.X;// * elapsedSec;
+				m_Bullets.at(i).m_Velocity.Y = hitForce.Y;// * elapsedSec;
 			}
 			
 		}
@@ -257,10 +261,13 @@ void Game::Update( float deltaSeconds )
 
 							hitForce = SVectors::Scale(
 								SVectors::NormalizeVector(m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector),
-								m_Player.GetShieldForce() * elapsedSec);
+								m_Player.GetShieldForce());
 
-							m_Bullets.at(i).m_Velocity.X += hitForce.X;
-							m_Bullets.at(i).m_Velocity.Y += hitForce.Y;
+							//m_Bullets.at(i).m_Velocity.X += hitForce.X * elapsedSec;
+							//m_Bullets.at(i).m_Velocity.Y += hitForce.Y * elapsedSec;
+
+							m_Bullets.at(i).m_Velocity.X = hitForce.X;// * elapsedSec;
+							m_Bullets.at(i).m_Velocity.Y = hitForce.Y;// * elapsedSec;
 						}
 
 						
@@ -287,10 +294,13 @@ void Game::Update( float deltaSeconds )
 
 							hitForce = SVectors::Scale(
 								SVectors::NormalizeVector(m_Bullets.at(j).m_BodyOverlapInfo.TranslationVector),
-								m_Player.GetShieldForce() * elapsedSec);
+								m_Player.GetShieldForce());
 
-							m_Bullets.at(j).m_Velocity.X += hitForce.X;
-							m_Bullets.at(j).m_Velocity.Y += hitForce.Y;
+							//m_Bullets.at(i).m_Velocity.X += hitForce.X * elapsedSec;
+							//m_Bullets.at(i).m_Velocity.Y += hitForce.Y * elapsedSec;
+
+							m_Bullets.at(i).m_Velocity.X = hitForce.X;// * elapsedSec;
+							m_Bullets.at(i).m_Velocity.Y = hitForce.Y;// * elapsedSec;
 						}
 						
 
@@ -426,6 +436,8 @@ void Game::Draw( ) const
 
 	m_Player.DrawLife();
 
+	m_MousePositionScreenIndicator.Draw(FColor4i{ 255,255,255,255 }, false, 5.f);
+
 	for (size_t i = 0; i < m_Bullets.size(); i++)
 	{
 		if (m_Bullets.at(i).IsSpawned)
@@ -453,16 +465,20 @@ void Game::Draw( ) const
 		m_CurrentLevel.at(i).ScreenRect.Draw(FColor4i{ 255,255,255,255 }, true, false);
 	}
 
+	if (m_Player.IsShieldActivated())
+	{
+		utils::DrawLine(
+			m_MousePositionScreenIndicator.Center.X,
+			m_MousePositionScreenIndicator.Center.Y,
+			m_Player.ConstBody().ScreenCircle.Center.X,
+			m_Player.ConstBody().ScreenCircle.Center.Y,
+			3.f);
+	}
 
 	m_Player.Draw();
 	
 	
-	//utils::DrawLine(
-	//	m_Player.Body.ScreenCircle.Center.X,
-	//	m_Player.Body.ScreenCircle.Center.Y,
-	//	m_Player.Body.ScreenCircle.Center.X + m_Player.Velocity.X,
-	//	m_Player.Body.ScreenCircle.Center.Y + m_Player.Velocity.Y,
-	//	5);
+	
 }
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
@@ -495,6 +511,7 @@ void Game::ProcessMouseMotionEvent( const SDL_MouseMotionEvent& e )
 
 	m_CurrentMouseScreenPosition.X = e.x;
 	m_CurrentMouseScreenPosition.Y = e.y;
+	m_MousePositionScreenIndicator.Center = m_CurrentMouseScreenPosition;
 }
 
 void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
@@ -538,17 +555,34 @@ void Game::ProcessMouseUpEvent( const SDL_MouseButtonEvent& e )
 	//	std::cout << " middle button " << std::endl;
 	//	break;
 	//}
-	if (e.button == SDL_BUTTON_LEFT)
-	{
-		m_Player.GetDashDirection(e.x, e.y, false);
-	}
-	if (e.button == SDL_BUTTON_RIGHT)
-	{
-		m_Player.GetDashDirection(e.x, e.y, true);
-	}
+	//if (e.button == SDL_BUTTON_LEFT)
+	//{
+	//	m_Player.GetDashDirection(e.x, e.y, false);
+	//}
+	//if (e.button == SDL_BUTTON_RIGHT)
+	//{
+	//	m_Player.GetDashDirection(e.x, e.y, true);
+	//}
 	if (e.button != SDL_BUTTON_MIDDLE)
 	{
 		m_Player.DeactivateShield();
+
+		FVector2f impulseDirection{};
+		FBullet* currentBullet{ nullptr };
+
+		for (size_t i = 0; i < m_Player.BulletsToControl().size(); i++)
+		{
+			currentBullet = &m_Bullets.at(m_Player.BulletsToControl().at(i));
+			impulseDirection = SVectors::Subtract(FVector2f{ (float)e.x, (float)e.y }, currentBullet->m_Body.ScreenCircle.Center);
+
+			impulseDirection = SVectors::Scale(
+				SVectors::NormalizeVector(impulseDirection),
+				m_Player.GetShieldForce());
+
+			currentBullet->m_Velocity = impulseDirection;
+		}
+
+		m_Player.BulletsToControl().clear();
 	}
 }
 
@@ -620,7 +654,7 @@ void Game::LoadLevel(int levelIndex)
 		currentPosition.X = rects.at(i).Left + (rects.at(i).Width/2.f );
 		currentPosition.Y = rects.at(i).Top  - (rects.at(i).Height/2.f);
 
-		CreateFollowingEnemy(3, 0, currentPosition, CreateFollowingBullet(2));
+		CreateFollowingEnemy(3, 3, currentPosition, CreateFollowingBullet(2));
 	}
 	
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_StaticBulletColor, m_LevelScale.X, m_LevelScale.Y);
@@ -878,7 +912,7 @@ void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& 
 	enemy.AlwaysLookTowardsPlayer = true;
 
 	//enemy.DistanceToKeepFromPlayer;
-	enemy.FollowingSpeed = 200;
+	//enemy.FollowingSpeed = 5000;
 
 	enemy.CollideWithLevel = true;
 
@@ -1032,7 +1066,7 @@ FBullet Game::CreateFollowingBullet(int maxLife)
 	bullet.BulletBehaviour = EBulletBehaviour::FollowPlayer;
 
 	bullet.AlwaysLookTowardsPlayer = false;
-	bullet.FollowingSpeed = 500;
+	//bullet.FollowingSpeed = 5000;
 
 	bullet.CollideWithLevel = true;
 

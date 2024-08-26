@@ -33,7 +33,7 @@ namespace Pillar {
 		bool AlwaysLookTowardsPlayer{ true };
 
 		float DistanceToKeepFromPlayer{ 0.f };
-		float FollowingSpeed{ 500 };
+		float FollowingSpeed{ 50000 };
 
 		bool CollideWithLevel{ true };
 

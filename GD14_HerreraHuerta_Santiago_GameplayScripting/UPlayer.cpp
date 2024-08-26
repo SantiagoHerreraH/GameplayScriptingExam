@@ -9,9 +9,6 @@ namespace Pillar {
 
 		Shield().WorldCircle.Radius = m_MaxShieldRadius;
 		Shield().ScreenCircle = Shield().WorldCircle;
-
-		m_CurrentShotForceCircle.WorldCircle.Radius = 5;
-		m_CurrentShotForceCircle.ScreenCircle.Radius = 5;
 	}
 	void UPlayer::Update(float elapsedSec)
 	{
@@ -46,8 +43,6 @@ namespace Pillar {
 		{
 			m_Shield.ScreenCircle.Draw(FColor4i{ 255,255,255,255 }, false, 5);
 		}
-
-		m_CurrentShotForceCircle.ScreenCircle.Draw(FColor4i{ 0,255,255,255 }, false, 5);
 		
 	}
 	void UPlayer::SetCameraDelta(const FVector2f& cameraDelta)
@@ -58,9 +53,6 @@ namespace Pillar {
 		m_Shield.ScreenCircle.Radius   = m_Shield.WorldCircle.Radius;
 		m_Shield.ScreenCircle.Center.X = m_Shield.WorldCircle.Center.X + cameraDelta.X;
 		m_Shield.ScreenCircle.Center.Y = m_Shield.WorldCircle.Center.Y + cameraDelta.Y;
-
-		m_CurrentShotForceCircle.ScreenCircle.Center.X = m_CurrentShotForceCircle.ScreenCircle.Center.X + cameraDelta.X;
-		m_CurrentShotForceCircle.ScreenCircle.Center.Y = m_CurrentShotForceCircle.ScreenCircle.Center.Y + cameraDelta.Y;
 	}
 	bool UPlayer::IsShieldActivated() const
 	{
@@ -105,6 +97,10 @@ namespace Pillar {
 	{
 		return m_ShieldOverlapInfo;
 	}
+	std::vector<int>& UPlayer::BulletsToControl()
+	{
+		return m_BulletIndexesToControl;
+	}
 	void UPlayer::DeactivateShield()
 	{
 		m_ShieldActivated = false;
@@ -130,6 +126,10 @@ namespace Pillar {
 	float UPlayer::GetTimeMultiplier() const
 	{
 		return m_TimeMultiplier;
+	}
+	const FCircleCollider& UPlayer::ConstBody() const
+	{
+		return m_Body;
 	}
 	FCircleCollider& UPlayer::Body()
 	{
@@ -225,46 +225,65 @@ namespace Pillar {
 			if (pStates[SDL_SCANCODE_D])
 			{
 				m_PressingRight = true;
-				m_Velocity.X = m_MovementSpeed * elapsedSec;
+				//if (m_Velocity.X < 0)
+				//{
+				//	m_Velocity.X = 0;
+				//}
+				m_Velocity.X += m_MovementSpeed * elapsedSec;
 			}
-			else if (m_PressingRight)
-			{
-				m_Velocity.X = 0;
-				m_PressingRight = false;
-			}
+			//else if (m_PressingRight)
+			//{
+			//	m_Velocity.X = 0;
+			//	m_PressingRight = false;
+			//}
 
 			if (pStates[SDL_SCANCODE_A])
 			{
 				m_PressingLeft = true;
-				m_Velocity.X = -m_MovementSpeed * elapsedSec;
-			}
-			else if (m_PressingLeft)
-			{
-				m_Velocity.X = 0;
-				m_PressingLeft = false;
-			}
 
-			if (pStates[SDL_SCANCODE_W] && !m_PressingUp)
+				//if (m_Velocity.X > 0)
+				//{
+				//	m_Velocity.X = 0;
+				//}
+				m_Velocity.X += -m_MovementSpeed * elapsedSec;
+			}
+			//else if (m_PressingLeft)
+			//{
+			//	m_Velocity.X = 0;
+			//	m_PressingLeft = false;
+			//}
+
+			if (pStates[SDL_SCANCODE_W])// && !m_PressingUp)
 			{
 				m_PressingUp = true;
-				m_Velocity.Y = m_JumpSpeed * elapsedSec;
-			}
-			else if (!pStates[SDL_SCANCODE_W] && m_PressingUp)
-			{
-				m_Velocity.Y = 0;
-				m_PressingUp = false;
-			}
 
-			if (pStates[SDL_SCANCODE_S] && !m_PressingDown)
+				//if (m_Velocity.Y < 0)
+				//{
+				//	m_Velocity.Y = 0;
+				//}
+
+				m_Velocity.Y += m_JumpSpeed * elapsedSec;
+			}
+			//else if (!pStates[SDL_SCANCODE_W] && m_PressingUp)
+			//{
+			//	m_Velocity.Y = 0;
+			//	m_PressingUp = false;
+			//}
+
+			if (pStates[SDL_SCANCODE_S])// && !m_PressingDown)
 			{
 				m_PressingDown = true;
-				m_Velocity.Y = -m_JumpSpeed * elapsedSec;
+				//if (m_Velocity.Y > 0)
+				//{
+				//	m_Velocity.Y = 0;
+				//}
+				m_Velocity.Y += -m_JumpSpeed * elapsedSec;
 			}
-			else if (!pStates[SDL_SCANCODE_S] && m_PressingDown)
-			{
-				m_Velocity.Y = 0;
-				m_PressingDown = false;
-			}
+			//else if (!pStates[SDL_SCANCODE_S] && m_PressingDown)
+			//{
+			//	m_Velocity.Y = 0;
+			//	m_PressingDown = false;
+			//}
 		}
 	}
 
@@ -275,13 +294,16 @@ namespace Pillar {
 
 	void UPlayer::UpdateShieldState(float elapsedSec)
 	{
-		m_CurrentShotForceCircle.WorldCircle.Center = m_Body.WorldCircle.Center;
 
-		SetNormalTime();
-
-		if ((m_ShieldActivated || (m_ShieldReadyForDeactivation &&
-			m_CurrentShieldActivationTime > 0)))
+		if (TimeIsSlowed)
 		{
+			elapsedSec = ConvertSlowModeTimeToNormalTime(elapsedSec);
+		}
+
+		if (m_ShieldActivated)// || (m_ShieldReadyForDeactivation && m_CurrentShieldActivationTime > 0)))
+		{
+			
+
 			m_CurrentShieldActivationTime += elapsedSec;
 			m_Shield.WorldCircle.Radius =
 				STools::CalculateLerpValue(
@@ -289,38 +311,36 @@ namespace Pillar {
 					m_MinShieldRadius,
 					m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
 
-			m_Gravity = STools::CalculateLerpValue(
-				m_MinGravity,
-				m_MaxGravity,
-				m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
-
-			if (!m_ShieldActivated)
-			{
-				elapsedSec = ConvertSlowModeTimeToNormalTime(elapsedSec);
-			}
-			if (m_ShieldCollided)
-			{
-				SlowDownTime();
-				m_Velocity.X = m_CurrentShotForce.X * elapsedSec;
-				m_Velocity.Y = m_CurrentShotForce.Y * elapsedSec;
-
-				m_CurrentShotForceCircle.WorldCircle.Center.X = m_Body.WorldCircle.Center.X + m_Velocity.X;
-				m_CurrentShotForceCircle.WorldCircle.Center.Y = m_Body.WorldCircle.Center.Y + m_Velocity.Y;
-
-				m_CurrentShotForce.X = 0;
-				m_CurrentShotForce.Y = 0;
-			}
-			if (!m_ShieldActivated)
-			{
-				SetNormalTime();
-			}
-			
-
 			if (m_CurrentShieldActivationTime >= m_MaxShieldActivationTime)
 			{
 				m_CurrentShieldActivationTime = 0;
 				m_Shield.WorldCircle.Radius = m_MaxShieldRadius;
+				m_ShieldActivated = false;
 			}
+
+			if (m_ShieldCollided)
+			{
+				SlowDownTime();
+			}
+		}
+		else
+		{
+			SetNormalTime();
+
+			if (m_CurrentShieldActivationTime > 0)
+			{
+				m_CurrentShieldActivationTime -= elapsedSec;
+				m_Shield.WorldCircle.Radius =
+					STools::CalculateLerpValue(
+						m_MaxShieldRadius,
+						m_MinShieldRadius,
+						m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
+			}
+			else
+			{
+				m_CurrentShieldActivationTime = 0;
+			}
+			
 		}
 
 	}
@@ -388,6 +408,7 @@ namespace Pillar {
 	void UPlayer::SlowDownTime()
 	{
 		m_TimeMultiplier = 0.1f;
+		TimeIsSlowed = true;
 	}
 
 	float UPlayer::ConvertSlowModeTimeToNormalTime(float currentDeltaSeconds)
@@ -398,6 +419,7 @@ namespace Pillar {
 	void UPlayer::SetNormalTime()
 	{
 		m_TimeMultiplier = 1.f;
+		TimeIsSlowed = false;
 	}
 
 }
