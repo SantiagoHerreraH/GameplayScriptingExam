@@ -15,7 +15,8 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	LoadLevel(m_CurrentLevelIndex);
+	//LoadLevel(m_CurrentLevelIndex);
+	LoadLevel(3);
 
 	m_Player.HealthBar().Size = FVector2f{ 200,50 };
 	m_Player.HealthBar().Position = FVector2f{ 30, GetViewPort().height - m_Player.HealthBar().Size.Y - 10};
@@ -262,7 +263,7 @@ void Game::Update( float deltaSeconds )
 
 						
 
-						if (!m_Bullets.at(i).Wounded && !m_Bullets.at(i).AlwaysWounded)
+						if ((!m_Bullets.at(i).Wounded || m_Bullets.at(j).IsStatic) && !m_Bullets.at(i).AlwaysWounded)
 						{
 							m_Bullets.at(i).Wounded = true;
 							m_Bullets.at(i).CurrentWoundedTime = 0;
@@ -291,7 +292,7 @@ void Game::Update( float deltaSeconds )
 						}
 						
 
-						if (!m_Bullets.at(j).Wounded && !m_Bullets.at(j).AlwaysWounded)
+						if ((!m_Bullets.at(j).Wounded || m_Bullets.at(i).IsStatic) && !m_Bullets.at(j).AlwaysWounded)
 						{
 							m_Bullets.at(j).Wounded = true;
 							m_Bullets.at(j).CurrentWoundedTime = 0;
@@ -308,17 +309,18 @@ void Game::Update( float deltaSeconds )
 				}
 			}
 
-			if (m_Bullets.at(i).CollideWithLevel && !m_Bullets.at(i).IsStatic)
+			if ((m_Bullets.at(i).CollideWithLevel || m_Bullets.at(i).Wounded)
+				&& !m_Bullets.at(i).IsStatic)
 			{
-				for (size_t i = 0; i < m_CurrentLevel.size(); i++)
+				for (size_t lvlCollisionIdx = 0; lvlCollisionIdx < m_CurrentLevel.size(); lvlCollisionIdx++)
 				{
-					if (SCollision::IsOverlapping(m_Bullets.at(i).m_Body.WorldCircle, m_CurrentLevel.at(i).WorldRect, m_Bullets.at(i).m_BodyOverlapInfo, false))
+					if (SCollision::IsOverlapping(m_Bullets.at(i).m_Body.WorldCircle, m_CurrentLevel.at(lvlCollisionIdx).WorldRect, m_Bullets.at(i).m_BodyOverlapInfo, false))
 					{
 						m_Bullets.at(i).m_Body.WorldCircle.Center.X += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.X;
 						m_Bullets.at(i).m_Body.WorldCircle.Center.Y += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.Y;
 
-						m_Bullets.at(i).m_Velocity.X += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.X;
-						m_Bullets.at(i).m_Velocity.Y += m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.Y;
+						m_Bullets.at(i).m_Velocity.X = m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.X;
+						m_Bullets.at(i).m_Velocity.Y = m_Bullets.at(i).m_BodyOverlapInfo.TranslationVector.Y;
 					}
 				}
 			}
@@ -640,7 +642,7 @@ void Game::LoadLevel(int levelIndex)
 	}
 	
 	rects = SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_SpawnPointColor, m_LevelScale.X, m_LevelScale.Y));
-
+	m_SpawnPoints.clear();
 	FVector2f leftestSpawnPoint{INFINITY, INFINITY};
 	float currentCenter{};
 
@@ -893,7 +895,7 @@ void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& 
 
 	enemy.SenseBound = true;//set sense into the center of the body
 	enemy.Sense.WorldCircle.Center = position;
-	enemy.Sense.WorldCircle.Radius = 120;
+	enemy.Sense.WorldCircle.Radius = 500;
 	enemy.Sense.ScreenCircle = enemy.Sense.WorldCircle;
 
 	enemy.Wounded = false;
@@ -1044,7 +1046,9 @@ FBullet Game::CreateFollowingBullet(int maxLife)
 	bullet.m_Body.WorldCircle.Radius = bullet.MaxHealthBodyRadius;
 	bullet.m_Body.ScreenCircle = bullet.m_Body.WorldCircle;
 
-	bullet.SenseBound = false;
+	bullet.SenseBound = true;
+	bullet.Sense.WorldCircle.Radius = 500;
+	bullet.Sense.ScreenCircle = bullet.Sense.WorldCircle;
 
 	bullet.Wounded = false;
 	bullet.MaxWoundedTime = 1.f;
@@ -1111,7 +1115,7 @@ FBullet Game::CreateMovableBullet(int maxLife, const FVector2f& position)
 	bullet.AlwaysLookTowardsPlayer = false;
 	bullet.FollowingSpeed = 500;
 
-	bullet.CollideWithLevel = false;
+	bullet.CollideWithLevel = true;
 
 	bullet.CurrentLife = maxLife;
 	bullet.MaxLife = maxLife;
