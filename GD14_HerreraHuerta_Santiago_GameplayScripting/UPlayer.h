@@ -108,7 +108,8 @@ namespace Pillar {
 		FCircleCollider m_Body;
 		FOverlapInfo m_BodyOverlapInfo;
 		FVector2f m_Velocity;
-		FVector2f m_CurrentShotForce;
+		FVector2f m_CurrentShotForce; 
+		FCircleCollider m_CurrentShotForceCircle;
 
 		float m_MaxGravity{ 1000 };
 		float m_MinGravity{0};

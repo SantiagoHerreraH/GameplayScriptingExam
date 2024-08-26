@@ -467,19 +467,20 @@ void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
 void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 {
 	//std::cout << "KEYUP event: " << e.keysym.sym << std::endl;
-	//switch ( e.keysym.sym )
-	//{
-	//case SDLK_LEFT:
-	//	//std::cout << "Left arrow key released\n";
-	//	break;
-	//case SDLK_RIGHT:
-	//	//std::cout << "`Right arrow key released\n";
-	//	break;
-	//case SDLK_1:
-	//case SDLK_KP_1:
-	//	//std::cout << "Key 1 released\n";
-	//	break;
-	//}
+	switch ( e.keysym.sym )
+	{
+	case SDLK_r:
+		m_Player.Respawn();
+		//std::cout << "Left arrow key released\n";
+		break;
+	case SDLK_RIGHT:
+		//std::cout << "`Right arrow key released\n";
+		break;
+	case SDLK_1:
+	case SDLK_KP_1:
+		//std::cout << "Key 1 released\n";
+		break;
+	}
 }
 
 void Game::ProcessMouseMotionEvent( const SDL_MouseMotionEvent& e )
@@ -509,12 +510,10 @@ void Game::ProcessMouseDownEvent( const SDL_MouseButtonEvent& e )
 	if (e.button == SDL_BUTTON_LEFT)
 	{
 		m_Player.ActivateShield();
-		m_Player.GetDashDirection(e.x, e.y, false);
 	}
 	if (e.button == SDL_BUTTON_RIGHT)
 	{
 		m_Player.ActivateShield();
-		m_Player.GetDashDirection(e.x, e.y, true);
 	}
 }
 
@@ -533,7 +532,14 @@ void Game::ProcessMouseUpEvent( const SDL_MouseButtonEvent& e )
 	//	std::cout << " middle button " << std::endl;
 	//	break;
 	//}
-
+	if (e.button == SDL_BUTTON_LEFT)
+	{
+		m_Player.GetDashDirection(e.x, e.y, false);
+	}
+	if (e.button == SDL_BUTTON_RIGHT)
+	{
+		m_Player.GetDashDirection(e.x, e.y, true);
+	}
 	if (e.button != SDL_BUTTON_MIDDLE)
 	{
 		m_Player.DeactivateShield();

@@ -9,6 +9,9 @@ namespace Pillar {
 
 		Shield().WorldCircle.Radius = m_MaxShieldRadius;
 		Shield().ScreenCircle = Shield().WorldCircle;
+
+		m_CurrentShotForceCircle.WorldCircle.Radius = 5;
+		m_CurrentShotForceCircle.ScreenCircle.Radius = 5;
 	}
 	void UPlayer::Update(float elapsedSec)
 	{
@@ -44,6 +47,9 @@ namespace Pillar {
 		{
 			m_Shield.ScreenCircle.Draw(FColor4i{ 255,255,255,255 }, false, 5);
 		}
+
+		m_CurrentShotForceCircle.ScreenCircle.Draw(FColor4i{ 0,255,255,255 }, false, 5);
+		
 	}
 	void UPlayer::SetCameraDelta(const FVector2f& cameraDelta)
 	{
@@ -53,6 +59,9 @@ namespace Pillar {
 		m_Shield.ScreenCircle.Radius   = m_Shield.WorldCircle.Radius;
 		m_Shield.ScreenCircle.Center.X = m_Shield.WorldCircle.Center.X + cameraDelta.X;
 		m_Shield.ScreenCircle.Center.Y = m_Shield.WorldCircle.Center.Y + cameraDelta.Y;
+
+		m_CurrentShotForceCircle.ScreenCircle.Center.X = m_CurrentShotForceCircle.ScreenCircle.Center.X + cameraDelta.X;
+		m_CurrentShotForceCircle.ScreenCircle.Center.Y = m_CurrentShotForceCircle.ScreenCircle.Center.Y + cameraDelta.Y;
 	}
 	bool UPlayer::IsShieldActivated() const
 	{
@@ -185,8 +194,8 @@ namespace Pillar {
 			m_Body.WorldCircle.Center.X += m_BodyOverlapInfo.TranslationVector.X;
 			m_Body.WorldCircle.Center.Y += m_BodyOverlapInfo.TranslationVector.Y;
 
-			m_Velocity.X += m_BodyOverlapInfo.TranslationVector.X;
-			m_Velocity.Y += m_BodyOverlapInfo.TranslationVector.Y;
+			//m_Velocity.X += m_BodyOverlapInfo.TranslationVector.X;
+			//m_Velocity.Y += m_BodyOverlapInfo.TranslationVector.Y;
 
 			SCollision::SolveRectPhysicsCollision(m_Velocity, m_BodyOverlapInfo);
 		}
@@ -263,11 +272,16 @@ namespace Pillar {
 
 	void UPlayer::UpdateParryDash(float elapsedSec)
 	{
+		m_CurrentShotForceCircle.WorldCircle.Center = m_Body.WorldCircle.Center;
+
 		if ((m_ShieldActivated || (m_ShieldReadyForDeactivation &&
 			m_CurrentShieldActivationTime > 0)) && m_ShieldCollided)
 		{
-			m_Velocity.X += m_CurrentShotForce.X * elapsedSec;
-			m_Velocity.Y += m_CurrentShotForce.Y * elapsedSec;
+			m_Velocity.X = m_CurrentShotForce.X * elapsedSec;
+			m_Velocity.Y = m_CurrentShotForce.Y * elapsedSec;
+
+			m_CurrentShotForceCircle.WorldCircle.Center.X = m_Body.WorldCircle.Center.X + m_Velocity.X;
+			m_CurrentShotForceCircle.WorldCircle.Center.Y = m_Body.WorldCircle.Center.Y + m_Velocity.Y;
 
 			m_CurrentShotForce.X = 0;
 			m_CurrentShotForce.Y = 0;
@@ -346,7 +360,7 @@ namespace Pillar {
 					m_MaxShieldRadius,
 					m_MinShieldRadius,
 					m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
-
+			
 			m_Gravity = STools::CalculateLerpValue(
 				m_MinGravity,
 				m_MaxGravity,
