@@ -96,10 +96,10 @@ private:
 
 	void CreateSpawnPoint(const FRectf& rect);
 
-	void CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const FVector2f& position, int bulletNumber, const FBullet& bulletType);
-	void CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol, int bulletNumber, const FBullet& bulletType);
-	void CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints, int bulletNumber, const FBullet& bulletType);
-	void CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& position, const FBullet& bulletType);
+	void CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const FVector2f& position);
+	void CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol);
+	void CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints);
+	void CreateFollowingEnemy(int maxLife, const FVector2f& position);
 
 	FBullet CreatePerishableBullet(int maxLife);
 	FBullet CreateUniDirectionalBullet(int MaxLife);

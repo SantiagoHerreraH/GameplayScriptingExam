@@ -25,8 +25,7 @@ namespace Pillar {
 		bool IsStatic{false};
 		bool IsSpawned{ true };
 
-		EBulletRank BulletRank;
-		int IndexOfCommander{ 0 };//if soldier
+		FVector2f StartingPos{};
 
 		EBulletBehaviour BulletBehaviour;
 		FVector2f CustomMovementDirection{};

@@ -40,8 +40,7 @@ void Game::Update( float deltaSeconds )
 
 	for (size_t i = 0; i < m_Bullets.size(); i++)
 	{
-		if (m_Bullets.at(i).AlwaysLookTowardsPlayer && 
-			m_Bullets.at(i).BulletRank == EBulletRank::Commander)
+		if (m_Bullets.at(i).AlwaysLookTowardsPlayer)
 		{
 			m_Bullets.at(i).CustomMovementDirection = 
 				SVectors::NormalizeVector(SVectors::Subtract(
@@ -85,13 +84,6 @@ void Game::Update( float deltaSeconds )
 				m_Bullets.at(i).CurrentDeathTime = 0;
 				m_Bullets.at(i).CurrentLife = m_Bullets.at(i).MaxLife;
 				m_Bullets.at(i).m_Body.WorldCircle.Radius = m_Bullets.at(i).MaxHealthBodyRadius;
-
-				if (m_Bullets.at(i).BulletRank == EBulletRank::Soldier && 
-					m_Bullets.at(m_Bullets.at(i).IndexOfCommander).IsSpawned)
-				{
-					m_Bullets.at(i).IsSpawned = true;
-					m_Bullets.at(i).m_Body.WorldCircle.Center = m_Bullets.at(m_Bullets.at(i).IndexOfCommander).m_Body.WorldCircle.Center;
-				}
 
 				m_Bullets.at(i).m_Body.ScreenCircle = m_Bullets.at(i).m_Body.WorldCircle;
 			}
@@ -648,7 +640,7 @@ void Game::LoadLevel(int levelIndex)
 		otherPosition.X = rects.at(i).Width < rects.at(i).Height ? rects.at(i).Left : rects.at(i).Left + rects.at(i).Width;
 		otherPosition.Y = rects.at(i).Width < rects.at(i).Height ? rects.at(i).Top - rects.at(i).Height : rects.at(i).Top;;
 
-		CreatePatrolEnemy(3, true, currentPosition, otherPosition, 1, CreateFollowingBullet(3));
+		CreatePatrolEnemy(3, true, currentPosition, otherPosition);
 	}
 
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_FollowPlayerEnemyColor, m_LevelScale.X, m_LevelScale.Y);
@@ -658,7 +650,7 @@ void Game::LoadLevel(int levelIndex)
 		currentPosition.X = rects.at(i).Left + (rects.at(i).Width/2.f );
 		currentPosition.Y = rects.at(i).Top  - (rects.at(i).Height/2.f);
 
-		CreateFollowingEnemy(3, 1, currentPosition, CreateFollowingBullet(2));
+		CreateFollowingEnemy(3, currentPosition);
 	}
 	
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_StaticBulletColor, m_LevelScale.X, m_LevelScale.Y);
@@ -718,7 +710,7 @@ void Game::CreateSpawnPoint(const FRectf& rect)
 
 
 
-void Game::CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const FVector2f& position, int bulletNumber, const FBullet& bulletType)
+void Game::CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const FVector2f& position)
 {
 	FBullet enemy{};
 
@@ -727,12 +719,9 @@ void Game::CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const
 	enemy.IsSpawned = true;
 	enemy.IsStatic = true;
 
-	enemy.BulletRank = EBulletRank::Commander;
-	enemy.IndexOfCommander = m_Bullets.size(); // own commander
-
 	enemy.AlwaysLookTowardsPlayer = false;
 	enemy.CustomMovementDirection = shootDirection;
-
+	enemy.StartingPos = position;
 	enemy.CollideWithLevel = true;
 
 	enemy.CurrentLife = maxLife;
@@ -757,31 +746,16 @@ void Game::CreateStaticShooterEnemy(int maxLife, FVector2f shootDirection, const
 	enemy.CurrentWoundedTime = 0.f;
 
 	m_Bullets.push_back(enemy);
-	FBullet currentBullet{ bulletType };
-	m_Bullets.reserve(m_Bullets.size() + bulletNumber);
-
-	for (int i = 0; i < bulletNumber; i++)
-	{
-		currentBullet.BulletRank;
-		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
-		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
-		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
-		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
-		m_Bullets.push_back(currentBullet);
-	}
 }
 
-void Game::CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol, int bulletNumber, const FBullet& bulletType)
+void Game::CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2f beginPatrol, FVector2f endPatrol)
 {
 
 	FBullet enemy{};
 
 	enemy.BulletNormalColor = FColor4i{255,10,10, 255};
-
+	enemy.StartingPos = beginPatrol;
 	enemy.IsSpawned = true;
-
-	enemy.BulletRank = EBulletRank::Commander;
-	enemy.IndexOfCommander = m_Bullets.size(); // own commander
 
 	enemy.BulletBehaviour = EBulletBehaviour::Patrol;
 	enemy.AlwaysLookTowardsPlayer = alwaysLookTowardsPlayer;
@@ -825,30 +799,15 @@ void Game::CreatePatrolEnemy(int maxLife, bool alwaysLookTowardsPlayer, FVector2
 	enemy.CurrentTimeWaited = 0;
 
 	m_Bullets.push_back(enemy);
-	FBullet currentBullet{ bulletType };
-	m_Bullets.reserve(m_Bullets.size() + bulletNumber);
-
-	for (int i = 0; i < bulletNumber; i++)
-	{
-		currentBullet.BulletRank;
-		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
-		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
-		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
-		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
-		m_Bullets.push_back(currentBullet);
-	}
 }
 
-void Game::CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints, int bulletNumber, const FBullet& bulletType)
+void Game::CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patrolPoints )
 {
 	FBullet enemy{};
 
 	enemy.BulletNormalColor = FColor4i{ 255,255,10, 255 };
 
 	enemy.IsSpawned = true;
-
-	enemy.BulletRank = EBulletRank::Commander;
-	enemy.IndexOfCommander = m_Bullets.size(); // own commander
 
 	enemy.BulletBehaviour = EBulletBehaviour::Patrol;
 	enemy.AlwaysLookTowardsPlayer = true;
@@ -879,28 +838,17 @@ void Game::CreateFreePatrolEnemy(int maxLife, const std::vector<FVector2f>& patr
 	enemy.MaxWoundedTime = 1.f;
 	enemy.CurrentWoundedTime = 0.f;
 
+	enemy.StartingPos = patrolPoints.at(0);
+	
 	enemy.PatrolPositions = patrolPoints;
 	enemy.CurrentIndexToPatrol = 0;
 	enemy.MaxTimeToWaitAtEachPosition = 1.f;
 	enemy.CurrentTimeWaited = 0;
 
-	m_Bullets.reserve(m_Bullets.size() + bulletNumber + 1);
 	m_Bullets.push_back(enemy);
-	FBullet currentBullet{ bulletType };
-
-	for (int i = 0; i < bulletNumber; i++)
-	{
-		currentBullet.BulletRank;
-		currentBullet.BulletRank = EBulletRank::Soldier;
-		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
-		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
-		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
-		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
-		m_Bullets.push_back(currentBullet);
-	}
 }
 
-void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& position, const FBullet& bulletType)
+void Game::CreateFollowingEnemy(int maxLife, const FVector2f& position)
 {
 	FBullet enemy{};
 
@@ -908,8 +856,8 @@ void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& 
 
 	enemy.IsSpawned = true;
 
-	enemy.BulletRank = EBulletRank::Commander;
-	enemy.IndexOfCommander = m_Bullets.size(); // own commander
+
+	enemy.StartingPos = position;
 
 	enemy.BulletBehaviour = EBulletBehaviour::FollowPlayer;
 	enemy.AlwaysLookTowardsPlayer = true;
@@ -942,29 +890,19 @@ void Game::CreateFollowingEnemy(int maxLife, int bulletNumber, const FVector2f& 
 	enemy.MaxWoundedTime = 1.f;
 	enemy.CurrentWoundedTime = 0.f;
 
-	m_Bullets.reserve(m_Bullets.size() + bulletNumber + 1);
 	m_Bullets.push_back(enemy);
-	FBullet currentBullet{ bulletType };
-
-	for (int i = 0; i < bulletNumber; i++)
-	{
-		currentBullet.BulletRank;
-		currentBullet.IndexOfCommander = enemy.IndexOfCommander;
-		currentBullet.CustomMovementDirection = enemy.CustomMovementDirection;
-		currentBullet.m_Body.WorldCircle.Center = enemy.m_Body.WorldCircle.Center;
-		currentBullet.m_Body.ScreenCircle.Center = enemy.m_Body.ScreenCircle.Center;
-		m_Bullets.push_back(currentBullet);
-	}
+	
 }
 
 FBullet Game::CreatePerishableBullet(int maxLife)
 {
 	FBullet bullet{};
 
+
+	//bullet.StartingPos = position;
+
 	bullet.BulletNormalColor = FColor4i{ 30,70,255, 255 };
 	bullet.IsSpawned = true;
-
-	bullet.BulletRank = EBulletRank::Soldier;
 
 	bullet.BulletBehaviour = EBulletBehaviour::MoveStraightInCustomMovement;
 	bullet.AlwaysLookTowardsPlayer = false;
@@ -1005,15 +943,14 @@ FBullet Game::CreateUniDirectionalBullet(int maxLife)
 	bullet.BulletNormalColor = FColor4i{ 30,0,255, 255 };
 	bullet.IsSpawned = true;
 
-	bullet.BulletRank = EBulletRank::Soldier;
-	//bullet.IndexOfCommander = commanderIndex;
-
 	bullet.BulletBehaviour = EBulletBehaviour::MoveStraightInCustomMovement;
 	bullet.AlwaysLookTowardsPlayer = false;
 	//bullet.CustomMovementDirection = directionToLookAt;
 
 	//enemy.DistanceToKeepFromPlayer;
 	//bullet.FollowingSpeed = 2000;
+
+	//bullet.StartingPos = position;
 
 	bullet.CollideWithLevel = true;
 
@@ -1043,13 +980,6 @@ FBullet Game::CreateUniDirectionalBullet(int maxLife)
 	bullet.MaxWoundedTime = 1.f;
 	bullet.CurrentWoundedTime = 0.f;
 
-	//bullet.PatrolPositions.reserve(2);
-	//bullet.PatrolPositions.push_back(beginPatrol);
-	//bullet.PatrolPositions.push_back(endPatrol);
-	//bullet.CurrentIndexToPatrol = 0;
-	//bullet.MaxTimeToWaitAtEachPosition = 1.f;
-	//bullet.CurrentTimeWaited = 0;
-
 	return bullet;
 }
 
@@ -1059,11 +989,11 @@ FBullet Game::CreateFollowingBullet(int maxLife)
 
 	bullet.BulletNormalColor = FColor4i{ 70,30,255, 255 };
 
+	//bullet.StartingPos = position;
+
 	bullet.IsSpawned = true;
 	bullet.IsStatic = false;
 	bullet.AlwaysWounded = false;
-
-	bullet.BulletRank = EBulletRank::Soldier;
 
 	bullet.BulletBehaviour = EBulletBehaviour::FollowPlayer;
 
@@ -1102,13 +1032,12 @@ FBullet Game::CreateStaticBullet(int maxLife, const FVector2f& position)
 	FBullet bullet{};
 
 
+	bullet.StartingPos = position;
 	bullet.BulletNormalColor = FColor4i{ 0,0,255, 255 };
 
 	bullet.IsSpawned = true;
 	bullet.IsStatic = true;
 	bullet.AlwaysWounded = true;
-
-	bullet.BulletRank = EBulletRank::Soldier;
 
 	bullet.AlwaysLookTowardsPlayer = false;
 
@@ -1143,13 +1072,12 @@ FBullet Game::CreateMovableBullet(int maxLife, const FVector2f& position)
 	FBullet bullet{};
 
 
+	bullet.StartingPos = position;
 	bullet.BulletNormalColor = FColor4i{ 0,255,255, 255 };
 
 	bullet.IsSpawned = true;
 	bullet.IsStatic = false;
 	bullet.AlwaysWounded = true;
-
-	bullet.BulletRank = EBulletRank::Soldier;
 
 	bullet.AlwaysLookTowardsPlayer = false;
 	//bullet.FollowingSpeed = 500;
