@@ -65,6 +65,11 @@ private:
 
 	FCamera m_Camera{};
 
+	int m_NumberOfEnemiesKilled;
+	float m_TimeTakenToCompleteTheGame;
+	UTexture m_NumberOfEnemiesKilledMessage{ "Number Of Enemies Killed: ", "consola.ttf", 100, Color4f{1,1,1,1}};
+	UTexture m_TimeTakenToCompleteTheGameMessage{ "Time Taken To Complete The Game: ", "consola.ttf", 100, Color4f{1,1,1,1} };
+
 	bool m_Aiming{ false };
 	FCirclef m_MousePositionScreenIndicator{};
 	FVector2f m_CurrentMouseScreenPosition{};
@@ -83,12 +88,12 @@ private:
 
 	const FVector2f m_LevelScale{ 70,70 };
 	const std::string m_GeneralLevelString{ "Level_" };
-	const int m_MaxLevelNum{2};
+	const int m_MaxLevelNum{4};
 	int m_CurrentLevelIndex{0};
 	std::vector<FRectCollider> m_CurrentLevel;
 
 	std::vector<FRectCollider> m_SpawnPoints;
-	FRectCollider m_WinBounds{};
+	std::vector<FRectCollider> m_WinBounds;
 
 	void ResetLevel();
 	void NextLevel();

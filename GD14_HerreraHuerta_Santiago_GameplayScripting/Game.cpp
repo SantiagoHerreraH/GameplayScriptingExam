@@ -353,10 +353,14 @@ void Game::Update( float deltaSeconds )
 		}
 	}
 
-	if (SCollision::IsOverlapping(m_Player.Body().WorldCircle, m_WinBounds.WorldRect, false))
+	for (size_t i = 0; i < m_WinBounds.size(); i++)
 	{
-		NextLevel();
+		if (SCollision::IsOverlapping(m_Player.Body().WorldCircle, m_WinBounds.at(i).WorldRect, false))
+		{
+			NextLevel();
+		}
 	}
+	
 
 	// --- CAMERA LOGIC --- 
 	
@@ -378,9 +382,12 @@ void Game::Update( float deltaSeconds )
 	m_Player.SetShieldPosition(m_CurrentMouseScreenPosition.X, m_CurrentMouseScreenPosition.Y);
 	m_Player.SetCameraDelta(cameraDelta);
 
-
-	m_WinBounds.ScreenRect.Left = m_WinBounds.WorldRect.Left + cameraDelta.X;
-	m_WinBounds.ScreenRect.Top  = m_WinBounds.WorldRect.Top + cameraDelta.Y;
+	for (size_t i = 0; i < m_WinBounds.size(); i++)
+	{
+		m_WinBounds.at(i).ScreenRect.Left = m_WinBounds.at(i).WorldRect.Left + cameraDelta.X;
+		m_WinBounds.at(i).ScreenRect.Top  = m_WinBounds.at(i).WorldRect.Top  + cameraDelta.Y;
+	}
+	
 
 	for (size_t i = 0; i < m_CurrentLevel.size(); i++)
 	{
@@ -424,7 +431,10 @@ void Game::Draw( ) const
 		m_SpawnPoints.at(i).ScreenRect.Draw(FColor4i{ 0,255,0,255 }, true, false);
 	}
 
-	m_WinBounds.ScreenRect.Draw(FColor4i{ 255,255,0,255 }, true, false);
+	for (size_t i = 0; i < m_WinBounds.size(); i++)
+	{
+		m_WinBounds.at(i).ScreenRect.Draw(FColor4i{ 255,255,0,255 }, true, false);
+	}
 
 	m_Player.DrawLife();
 
@@ -696,8 +706,19 @@ void Game::LoadLevel(int levelIndex)
 	m_Player.SetVelocity(FVector2f{ 0,0 });
 
 	rects = SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_WinPointColor, m_LevelScale.X, m_LevelScale.Y));
-	m_WinBounds.ScreenRect = rects.at(0);
-	m_WinBounds.WorldRect = rects.at(0);
+	m_WinBounds.clear();
+	m_WinBounds.reserve(rects.size());
+
+	FRectCollider currentRectCollider{};
+
+	for (size_t i = 0; i < rects.size(); i++)
+	{
+		currentRectCollider.ScreenRect = rects.at(i);
+		currentRectCollider.WorldRect = rects.at(i);
+		m_WinBounds.push_back(currentRectCollider);
+	}
+	
+	
 }
 
 void Game::CreateSpawnPoint(const FRectf& rect)
