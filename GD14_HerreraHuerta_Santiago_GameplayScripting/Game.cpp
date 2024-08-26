@@ -28,11 +28,11 @@ void Game::Cleanup( )
 	UTexture::DeleteAll();
 }
 
-void Game::Update( float elapsedSec )
+void Game::Update( float deltaSeconds )
 {
 	// Check keyboard state
 	
-
+	const double elapsedSec{ STools::Clamp(deltaSeconds * m_Player.GetTimeMultiplier(), 0, 0.01)};
 
 	FVector2f followingOffset{};
 
@@ -629,13 +629,14 @@ void Game::LoadLevel(int levelIndex)
 	}
 
 	rects = currentLevel.MakeRectsFromPixelsOfColor(m_MovableBulletColor, m_LevelScale.X, m_LevelScale.Y);
+	m_Bullets.reserve(m_Bullets.size() + rects.size());
 
 	for (size_t i = 0; i < rects.size(); i++)
 	{
 		currentPosition.X = rects.at(i).Left + (rects.at(i).Width / 2.f);
 		currentPosition.Y = rects.at(i).Top - (rects.at(i).Height / 2.f);
 
-		CreateMovableBullet(3, currentPosition);
+		m_Bullets.push_back(CreateMovableBullet(3, currentPosition));
 	}
 	
 	rects = SGeometry::Simplify(currentLevel.MakeRectsFromPixelsOfColor(m_SpawnPointColor, m_LevelScale.X, m_LevelScale.Y));
@@ -649,7 +650,7 @@ void Game::LoadLevel(int levelIndex)
 		if (currentCenter < leftestSpawnPoint.X )
 		{
 			leftestSpawnPoint.X = currentCenter;
-			leftestSpawnPoint.Y = rects.at(i).Top + (rects.at(i).Height / 2.f);
+			leftestSpawnPoint.Y = rects.at(i).Top - (rects.at(i).Height / 2.f);
 		}
 		CreateSpawnPoint(rects.at(i));
 	}

@@ -266,8 +266,8 @@ namespace Pillar {
 		}
 		else
 		{
-			if (circle.Center.Y < rect.Top)         testY = rect.Top;      // top edge
-			else if (circle.Center.Y > rect.Top - rect.Height) testY = rect.Top - rect.Height;   // bottom edge
+			if (circle.Center.Y > rect.Top)         testY = rect.Top;      // top edge
+			else if (circle.Center.Y < (rect.Top - rect.Height)) testY = rect.Top - rect.Height;   // bottom edge
 		}
 
 

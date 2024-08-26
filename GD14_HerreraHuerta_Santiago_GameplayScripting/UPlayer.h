@@ -57,6 +57,7 @@ namespace Pillar {
 		void DeactivateShieldCollision();
 		float GetShieldForce()const;
 
+		float GetTimeMultiplier()const;
 
 		FCircleCollider& Body();
 		FOverlapInfo& BodyOverlapInfo();
@@ -76,12 +77,16 @@ namespace Pillar {
 	private:
 		void UpdatePlayerInput(float elapsedSec);
 		void UpdateGravity(float elapsedSec);
-		void UpdateParryDash(float elapsedSec);
+		void UpdateShieldState(float elapsedSec);
 		void SetAndClampVelocity(float elapsedSec);
 		void UpdateWoundedTime(float elapsedSec);
 		void RespawnIfDied();
-		void SpawnShieldIfActivated(float elapsedSec);
+		void SlowDownTime();
+		float ConvertSlowModeTimeToNormalTime(float currentDeltaSeconds);
+		void SetNormalTime();
 
+
+		float m_TimeMultiplier{ 1.f };
 		FHealthBar m_HealthBar;
 
 		FColor4i m_PlayerWoundedColor{ 255,100,100,255 };

@@ -18,10 +18,9 @@ namespace Pillar {
 		RespawnIfDied();
 		UpdatePlayerInput(elapsedSec);
 		UpdateGravity(elapsedSec);
-		UpdateParryDash(elapsedSec);
+		UpdateShieldState(elapsedSec);
 		SetAndClampVelocity(elapsedSec);
 		UpdateWoundedTime(elapsedSec);
-		SpawnShieldIfActivated(elapsedSec);
 	}
 	void UPlayer::DrawLife() const
 	{
@@ -127,6 +126,10 @@ namespace Pillar {
 	float UPlayer::GetShieldForce() const
 	{
 		return m_CollisionImpactForceMagnitude;
+	}
+	float UPlayer::GetTimeMultiplier() const
+	{
+		return m_TimeMultiplier;
 	}
 	FCircleCollider& UPlayer::Body()
 	{
@@ -270,22 +273,56 @@ namespace Pillar {
 		m_Velocity.Y -= m_Gravity * elapsedSec;
 	}
 
-	void UPlayer::UpdateParryDash(float elapsedSec)
+	void UPlayer::UpdateShieldState(float elapsedSec)
 	{
 		m_CurrentShotForceCircle.WorldCircle.Center = m_Body.WorldCircle.Center;
 
+		SetNormalTime();
+
 		if ((m_ShieldActivated || (m_ShieldReadyForDeactivation &&
-			m_CurrentShieldActivationTime > 0)) && m_ShieldCollided)
+			m_CurrentShieldActivationTime > 0)))
 		{
-			m_Velocity.X = m_CurrentShotForce.X * elapsedSec;
-			m_Velocity.Y = m_CurrentShotForce.Y * elapsedSec;
+			m_CurrentShieldActivationTime += elapsedSec;
+			m_Shield.WorldCircle.Radius =
+				STools::CalculateLerpValue(
+					m_MaxShieldRadius,
+					m_MinShieldRadius,
+					m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
 
-			m_CurrentShotForceCircle.WorldCircle.Center.X = m_Body.WorldCircle.Center.X + m_Velocity.X;
-			m_CurrentShotForceCircle.WorldCircle.Center.Y = m_Body.WorldCircle.Center.Y + m_Velocity.Y;
+			m_Gravity = STools::CalculateLerpValue(
+				m_MinGravity,
+				m_MaxGravity,
+				m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
 
-			m_CurrentShotForce.X = 0;
-			m_CurrentShotForce.Y = 0;
+			if (!m_ShieldActivated)
+			{
+				elapsedSec = ConvertSlowModeTimeToNormalTime(elapsedSec);
+			}
+			if (m_ShieldCollided)
+			{
+				SlowDownTime();
+				m_Velocity.X = m_CurrentShotForce.X * elapsedSec;
+				m_Velocity.Y = m_CurrentShotForce.Y * elapsedSec;
+
+				m_CurrentShotForceCircle.WorldCircle.Center.X = m_Body.WorldCircle.Center.X + m_Velocity.X;
+				m_CurrentShotForceCircle.WorldCircle.Center.Y = m_Body.WorldCircle.Center.Y + m_Velocity.Y;
+
+				m_CurrentShotForce.X = 0;
+				m_CurrentShotForce.Y = 0;
+			}
+			if (!m_ShieldActivated)
+			{
+				SetNormalTime();
+			}
+			
+
+			if (m_CurrentShieldActivationTime >= m_MaxShieldActivationTime)
+			{
+				m_CurrentShieldActivationTime = 0;
+				m_Shield.WorldCircle.Radius = m_MaxShieldRadius;
+			}
 		}
+
 	}
 
 	void UPlayer::SetAndClampVelocity(float elapsedSec)
@@ -348,30 +385,19 @@ namespace Pillar {
 		}
 	}
 
-	void UPlayer::SpawnShieldIfActivated(float elapsedSec)
+	void UPlayer::SlowDownTime()
 	{
-		if (m_ShieldActivated ||
-			(m_ShieldReadyForDeactivation &&
-				m_CurrentShieldActivationTime > 0))
-		{
-			m_CurrentShieldActivationTime += elapsedSec;
-			m_Shield.WorldCircle.Radius =
-				STools::CalculateLerpValue(
-					m_MaxShieldRadius,
-					m_MinShieldRadius,
-					m_CurrentShieldActivationTime / m_MaxShieldActivationTime);
-			
-			m_Gravity = STools::CalculateLerpValue(
-				m_MinGravity,
-				m_MaxGravity,
-				m_CurrentShieldActivationTime / m_MaxShieldActivationTime);;
+		m_TimeMultiplier = 0.1f;
+	}
 
-			if (m_CurrentShieldActivationTime >= m_MaxShieldActivationTime)
-			{
-				m_CurrentShieldActivationTime = 0;
-				m_Shield.WorldCircle.Radius = m_MaxShieldRadius;
-			}
-		}
+	float UPlayer::ConvertSlowModeTimeToNormalTime(float currentDeltaSeconds)
+	{
+		return currentDeltaSeconds * 10;
+	}
+
+	void UPlayer::SetNormalTime()
+	{
+		m_TimeMultiplier = 1.f;
 	}
 
 }
