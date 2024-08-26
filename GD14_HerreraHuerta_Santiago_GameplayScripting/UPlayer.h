@@ -124,8 +124,7 @@ namespace Pillar {
 		float m_MaxGravity{ 0 };// { 1000 };
 		float m_MinGravity{0};
 		float m_Gravity{ m_MaxGravity };
-		float m_MovementSpeed{4000};//{ 40000 };
-		float m_JumpSpeed{ 4000 };// { 70000 };
+		float m_MovementSpeed{900};
 
 		float m_MaxPlayerVelocityPerSecond{ 600 };
 		float m_DashForceMagnitude{ 100000 };

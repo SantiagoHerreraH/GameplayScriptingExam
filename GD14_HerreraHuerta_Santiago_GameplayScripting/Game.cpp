@@ -442,7 +442,11 @@ void Game::Draw( ) const
 	{
 		if (m_Bullets.at(i).IsSpawned)
 		{
-			if (m_Bullets.at(i).Wounded || m_Bullets.at(i).AlwaysWounded)
+			if (m_Bullets.at(i).AlwaysWounded)
+			{
+				m_Bullets.at(i).m_Body.ScreenCircle.Draw(m_Bullets.at(i).BulletParriedColor, false, 7.f);
+			}
+			if (m_Bullets.at(i).Wounded)
 			{
 				m_Bullets.at(i).m_Body.ScreenCircle.Draw(m_Bullets.at(i).BulletParriedColor, true);
 			}
